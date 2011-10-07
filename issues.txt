@@ -1,0 +1,11 @@
+Issues:
+
+"a'b"c' hangs - trailing ' or " or ` causes problems
+	Solved for now, but I will eventually need to fix the preprocessor to handle cases like that
+There's no good way to handle complex variable names
+	Solution:
+		Move main code into makeToken, which creates the leading token
+		Have it call itself whenever it reaches a ({[
+		Create an escape condition for ]})
+	Solution 2: Electric Boogaloo:
+		
