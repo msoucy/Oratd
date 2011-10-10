@@ -71,188 +71,68 @@ string evalStr(string str) {
 	return s;
 }
 
-char[] preprocess(string str, InputStream source = din, BraceType escapeFrom=BraceType.bNone) {
-	char[] ret;
-	BraceType[] delims;
-	bool flag = false;
-	size_t charpos;
-	while(str.length) {
-		version(linux) {
-			if(str[$-1]=='\r') {
-				str = str[0..$-1];
-			}
+real getNumeric(ref string src) {
+	string s;
+	real ret;
+	if(src.length>2 && src[0] == '0' && (
+			toLower(src)[1] == 'x' ||
+			toLower(src)[1] == 'b' ||
+			toLower(src)[1] == 'o'
+		)) {
+		switch(toLower(src)[1]) {
+		case 'x':
+			s = cast(string)(match(src,hexRegex).captures[0]);
+			ret = strToDouble(s[2..$],16);
+			break;
+		case 'b':
+			s = cast(string)(match(src,binaryRegex).captures[0]);
+			ret = strToDouble(s[2..$],2);
+			break;
+		case 'o':
+			s = cast(string)(match(src,octalRegex).captures[0]);
+			ret = strToDouble(s[2..$],8);
+			break;
+		default:
+			s = cast(string)(match(src,decimalRegex).captures[0]);
+			ret = strToDouble(s[2..$],10);
+			break;
 		}
-		while(str.length) {
-			switch(str[0]) {
-			case ';':
-				flag=true;
-				ret ~= str[0];
-				str = str[1..$];
-				break;
-			case '{':
-				delims ~= BraceType.bBrace;
-				ret ~= str[0];
-				str = str[1..$];
-				break;
-			case '(':
-				delims ~= BraceType.bParen;
-				ret ~= str[0];
-				str = str[1..$];
-				break;
-			case '[':
-				delims ~= BraceType.bBracket;
-				ret ~= str[0];
-				str = str[1..$];
-				break;
-			case '}':
-				if(delims.length) {
-					if(delims[$-1] != BraceType.bBrace) {
-						throw new OratrParseException(std.string.format(
-								"Mismatched } in position %d", charpos
-								));
-					} else {
-						delims.length -= 1;
-					}
-				} else {
-					if(escapeFrom == BraceType.bBrace) {
-						//
-					} else {
-						throw new OratrParseException(std.string.format(
-								"Mismatched } in position %d", charpos
-								));
-					}
-				}
-				ret ~= str[0];
-				str = str[1..$];
-				break;
-			case ']':
-				if(delims.length) {
-					if(delims[$-1] != BraceType.bBracket) {
-						throw new OratrParseException(std.string.format(
-								"Mismatched ] in position %d", charpos
-								));
-					} else {
-						delims.length -= 1;
-					}
-				} else {
-					throw new OratrParseException(std.string.format(
-							"Mismatched ] in position %d", charpos
-							));
-				}
-				ret ~= str[0];
-				str = str[1..$];
-				break;
-			case ')':
-				dout.writef("Delim size: %d\n", delims.length);
-				if(delims.length) {
-					if(delims[$-1] != BraceType.bParen) {
-						throw new OratrParseException(std.string.format(
-								"Mismatched ) in position %d", charpos
-								));
-					} else {
-						delims.length -= 1;
-						ret ~= str[0];
-						str = str[1..$];
-					}
-				} else if(escapeFrom != BraceType.bParen) {
-					ret~=str[0];
-					str = str[1..$];
-					return ret;
-				} else {
-					throw new OratrParseException(std.string.format(
-							"Leading ) in position %d", charpos
-							));
-				}
-				break;
-			case '"':
-			case '\'':
-				uint i=0;
-				ret ~= str[0];
-				for(i=1;i<str.length;i++) {
-					if(str[i] == '\\') {
-						ret ~= '\\';
-						if(i+1 != str.length) {
-							if(str[i]==str[0]) {
-								i++;
-								str ~= str[0];
-							}
-						} else {
-							throw new OratrParseException(std.string.format(
-									"Open %c in position %d", str[0], charpos+i
-									));
-						}
-					} else if(str[i]==str[0]) {
-						ret ~= str[0];
-						break;
-					} else {
-						ret ~= str[i];
-					}
-				}
-				if(ret[$-1] != str[0]) {
-					throw new OratrParseException(std.string.format(
-							"Open %s in position %d", str[0], charpos+i
-							));
-				}
-				if(i!=str.length) {
-					str = str[i+1..$];
-				} else {
-					str = "";
-				}
-				charpos += i-1;
-				break;
-			case '`':
-				uint i=0;
-				ret ~= str[0];
-				for(i=1;i<str.length;i++) {
-					if(str[i]==str[0]) {
-						ret ~= str[0];
-						break;
-					} else {
-						ret ~= str[i];
-					}
-				}
-				if(i==str.length) {
-					throw new OratrParseException(std.string.format(
-							"Open %s in position %d", str[0], charpos+i
-							));
-				}
-				if(i!=str.length) {
-					str = str[i+1..$];
-				} else {
-					str = "";
-				}
-				charpos += i-1;
-				break;
-			case '#':
-				str.length = 0;
-				break;
-			default:
-				ret ~= str[0];
-				str = str[1..$];
-				break;
-			}
-			charpos++;
-		}
-		if(delims.length) {
-			version(linux) {
-				if(str.length && str[$-1]=='\r') {
-					str = str[0..$-1];
-				}
-			}
-			char[] buf;
-			do {
-				buf = std.string.strip(source.readLine());
-			} while(!buf.length);
-			str ~= buf;
-		}
+	} else {
+		s = cast(string)(match(src,decimalRegex).captures[0]);
+		ret = strToDouble(s,10);
 	}
+	src = src[s.length..$];
 	return ret;
+}
+
+string getNextLine(InputStream source) {
+	string str = "";
+	str = cast(string)(source.readLine());
+	if(source.eof()) {
+		throw new OratrParseException("End of Input Stream");
+	}
+	return str;
 }
 
 Token makeToken(ref string src, InputStream source, BraceType escapeFrom=BraceType.bNone) {
 	Token ret;
 	src = strip(src);
-	if(src[0] == ';') {
+	if(src[0] == '#') {
+		// # ends the line with a comment
+		// #[ and #] are block comments
+		if(src.length>1 && src[1] == '[') {
+			sizediff_t pos = indexOf(src,"]#");
+			while(pos == -1) {
+				src ~= getNextLine(source);
+				pos = indexOf(src,"]#");
+			}
+			src = src[pos+2..$];
+		}  else {
+			ret.str = "";
+			ret.type = Token.VarType.tNone;
+			src = "";
+		}
+	} else if(src[0] == ';') {
 		// ; seperates sequences of commands
 		ret.str = "";
 		ret.type = Token.VarType.tCommandSeperator;
@@ -303,36 +183,9 @@ Token makeToken(ref string src, InputStream source, BraceType escapeFrom=BraceTy
 			src = src[s.length..$];
 		} else {
 			// It's a number???
-			string s;
-			if(src.length>2 && src[0] == '0' && (
-					toLower(src)[1] == 'x' ||
-					toLower(src)[1] == 'b' ||
-					toLower(src)[1] == 'o'
-				)) {
-				switch(toLower(src)[1]) {
-				case 'x':
-					s = cast(string)(match(src,hexRegex).captures[0]);
-					ret.d = strToDouble(s[2..$],16);
-					break;
-				case 'b':
-					s = cast(string)(match(src,binaryRegex).captures[0]);
-					ret.d = strToDouble(s[2..$],2);
-					break;
-				case 'o':
-					s = cast(string)(match(src,octalRegex).captures[0]);
-					ret.d = strToDouble(s[2..$],8);
-					break;
-				default:
-					s = cast(string)(match(src,decimalRegex).captures[0]);
-					ret.d = strToDouble(s[2..$],10);
-					break;
-				}
-			} else {
-				s = cast(string)(match(src,decimalRegex).captures[0]);
-				ret.d = strToDouble(s,10);
-			}
+			src = src[1..$];
+			ret.d = -getNumeric(src);
 			ret.type = Token.VarType.tNumeric;
-			src = src[s.length..$];
 		}
 	} else if(inPattern(src[0],opcodeList)) {
 		string s = cast(string)(match(src,opcodeRegex).captures[0]);
@@ -340,36 +193,8 @@ Token makeToken(ref string src, InputStream source, BraceType escapeFrom=BraceTy
 		ret.type = Token.VarType.tOpcode;
 		src = src[s.length..$];
 	} else if(inPattern(src[0],"0-9.")) {
-		string s;
-		if(src.length>2 && src[0] == '0' && (
-				toLower(src)[1] == 'x' ||
-				toLower(src)[1] == 'b' ||
-				toLower(src)[1] == 'o'
-			)) {
-			switch(toLower(src)[1]) {
-			case 'x':
-				s = cast(string)(match(src,hexRegex).captures[0]);
-				ret.d = strToDouble(s[2..$],16);
-				break;
-			case 'b':
-				s = cast(string)(match(src,binaryRegex).captures[0]);
-				ret.d = strToDouble(s[2..$],2);
-				break;
-			case 'o':
-				s = cast(string)(match(src,octalRegex).captures[0]);
-				ret.d = strToDouble(s[2..$],8);
-				break;
-			default:
-				s = cast(string)(match(src,decimalRegex).captures[0]);
-				ret.d = strToDouble(s[2..$],10);
-				break;
-			}
-		} else {
-			s = cast(string)(match(src,decimalRegex).captures[0]);
-			ret.d = strToDouble(s,10);
-		}
+		ret.d = getNumeric(src);
 		ret.type = Token.VarType.tNumeric;
-		src = src[s.length..$];
 	} else if(src[0] == '(') {
 		// Recursion all up in this code
 		src = src[1..$];
@@ -379,7 +204,7 @@ Token makeToken(ref string src, InputStream source, BraceType escapeFrom=BraceTy
 		// Recursion all up in this code
 		src = src[1..$];
 		ret.arr = tokenize(src, source, BraceType.bBrace);
-		ret.type = Token.VarType.tArray;
+		ret.type = Token.VarType.tRawArray;
 	} else if(src[0] == '{') {
 		// Recursion all up in this code
 		src = src[1..$];
@@ -394,17 +219,17 @@ Token makeToken(ref string src, InputStream source, BraceType escapeFrom=BraceTy
 			throw new OratrParseException("Mismatched )");
 		}
 	} else if(src[0] == ']') {
-		if(escapeFrom == BraceType.bParen) {
+		if(escapeFrom == BraceType.bBrace) {
 			// Recursive return
-			ret.type = Token.VarType.tClosingBracket;
+			ret.type = Token.VarType.tClosingBrace;
 			src = src[1..$];
 		} else {
 			throw new OratrParseException("Mismatched ]");
 		}
 	} else if(src[0] == '}') {
-		if(escapeFrom == BraceType.bParen) {
+		if(escapeFrom == BraceType.bBracket) {
 			// Recursive return
-			ret.type = Token.VarType.tClosingBrace;
+			ret.type = Token.VarType.tClosingBracket;
 			src = src[1..$];
 		} else {
 			throw new OratrParseException("Mismatched }");
@@ -432,29 +257,25 @@ Token[] tokenize(ref string src, InputStream source, BraceType escapeFrom=BraceT
 		ret ~= tmp;
 		return ret;
 	}
-	// Fix this to work with the new processing scheme
-	//src = preprocess(src, source);
 	
 	do {
 		tmp = makeToken(src,source,escapeFrom);
 		switch(tmp.type){
-			case Token.VarType.tClosingParen: {
-				// Just return the () expression
-				break;
-			}
-			case Token.VarType.tClosingBrace: {
-				// Evaluate the array
-				break;
-			}
+			case Token.VarType.tClosingParen:
+			case Token.VarType.tClosingBrace:
 			case Token.VarType.tClosingBracket: {
-				// Just return the {} expression
-				break;
+				// Just return the expression
+				return ret;
 			}
 			default: {
 				ret ~= tmp;
 				break;
 			}
 		}
-	} while(src.length);	
+		if(!src.length && escapeFrom != BraceType.bNone) {
+			dout.writef("> ");
+			src ~= getNextLine(source);
+		}
+	} while(src.length);
 	return ret;
 }

@@ -1,8 +1,12 @@
+import bi_basics;
 import errors;
+import environment;
 import std.conv;
 import std.stdio;
 import std.string;
 import std.array;
+
+typedef Token function(ref Token[], ref Environment) Function;
 
 struct Token {
 private:
@@ -21,6 +25,7 @@ public:
 		tFunction,
 		tOpcode,
 		tSpecial,
+		tBuiltin,
 		tCommandSeperator,
 		tArrayElementSeperator,
 		tVarOffsetSeperator,
@@ -29,6 +34,7 @@ public:
 		tClosingBracket,
 		tMax
 	}
+	Function func = &bi_basics.bi_null;
 	VarType type = VarType.tNone;
 	Token[] arr;
 	this(real _d=0) {
@@ -37,21 +43,23 @@ public:
 	this(string _s) {
 		str = _s;
 	}
-	@property string str() {
-		return _str;
-	}
-	@property void str(string nval) {
-		_str = nval;
-	}
-	@property real d() {
-		try {
-			return to!real(str);
-		} catch (Exception e) {
-			return 0;
+	@property {
+		string str() {
+			return _str;
 		}
-	}
-	@property void d(real _d) {
-		_str = to!(string)(_d);
+		void str(string nval) {
+			_str = nval;
+		}
+		real d() {
+			try {
+				return to!real(str);
+			} catch (Exception e) {
+				return 0;
+			}
+		}
+		void d(real _d) {
+			_str = to!(string)(_d);
+		}
 	}
 }
 
@@ -73,13 +81,15 @@ string vartypeToStr(Token.VarType v)
 		case Token.VarType.tVarname:
 			return "Variable Name";
 		case Token.VarType.tType:
-			return "Data Type";
+			return "";
 		case Token.VarType.tFunction:
 			return "Function";
 		case Token.VarType.tOpcode:
 			return "Operation Code";
 		case Token.VarType.tSpecial:
 			return "Special Character";
+		case Token.VarType.tBuiltin:
+			return "Built In Function";
 		case Token.VarType.tCommandSeperator:
 			return "Command Seperator";
 		case Token.VarType.tArrayElementSeperator:

@@ -3,6 +3,7 @@ import token;
 import tokenize;
 import errors;
 import system;
+import bi_math;
 
 import std.stdio;
 import std.algorithm;
@@ -24,7 +25,6 @@ void printTokens(Token[] t, int s) {
 
 void main()
 {
-	dout.writef(vartypeToStr(Token.VarType.tArray));
 	Environment env;
 	env.init();
 	string buf;
