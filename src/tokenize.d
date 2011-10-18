@@ -2,6 +2,7 @@ import token;
 import environment;
 import errors;
 import system;
+import bi_basics;
 import std.cstream;
 import std.string;
 import std.regex;
@@ -70,6 +71,47 @@ string evalStr(string str) {
 	}
 	return s;
 }
+
+string unevalStr(string str) {
+	string s = "";
+	size_t i;
+	for(i=0;i<str.length;i++) {
+		switch(str[++i]) {
+		case '\b':
+			// Backspace
+			s ~= "\\b";
+			break;
+		case '\n':
+			// Newline
+			s ~= "\\n";
+			break;
+		case '\t':
+			// Tab
+			s ~= "\\t";
+			break;
+		case '\r':
+			// Carriage return
+			s ~= "\\r";
+			break;
+		case '\\':
+			// Backslash
+			s ~= "\\\\";
+			break;
+		case '"':
+			// Doublequote
+			s ~= "\\\"";
+			break;
+		case '\'':
+			// Singlequote
+			s ~= "\\\'";
+			break;
+		default:
+			throw new OratrParseException(format("Invalid escape sequence: \\%s",str[i]));
+		}
+	}
+	return s;
+}
+
 
 real getNumeric(ref string src) {
 	string s;
@@ -142,6 +184,11 @@ Token makeToken(ref string src, InputStream source, BraceType escapeFrom=BraceTy
 		ret.str = ":";
 		ret.type = Token.VarType.tVarOffsetSeperator;
 		src = src[1..$];
+	} else if(src[0] == '$') {
+		// $ seperates type casts
+		ret.str = "$";
+		ret.type = Token.VarType.tRecast;
+		src = src[1..$];
 	} else if(src[0] == ',') {
 		// , seperates array values
 		ret.str = ",";
@@ -153,7 +200,7 @@ Token makeToken(ref string src, InputStream source, BraceType escapeFrom=BraceTy
 			throw new OratrParseException("Mismatched `");
 		}
 		string s = cast(string)(m.captures[0]);
-		ret.str = s;
+		ret.str = s[1..$-1];
 		ret.type = Token.VarType.tString;
 		src = src[s.length..$];
 	} else if(src[0] == '\'') {
@@ -162,7 +209,7 @@ Token makeToken(ref string src, InputStream source, BraceType escapeFrom=BraceTy
 			throw new OratrParseException("Mismatched '");
 		}
 		string s = cast(string)(m.captures[0]);
-		ret.str = evalStr(s);
+		ret.str = evalStr(s)[1..$-1];
 		ret.type = Token.VarType.tString;
 		src = src[s.length..$];
 	} else if(src[0] == '"') {
@@ -171,7 +218,7 @@ Token makeToken(ref string src, InputStream source, BraceType escapeFrom=BraceTy
 			throw new OratrParseException("Mismatched \"");
 		}
 		string s = cast(string)(m.captures[0]);
-		ret.str = evalStr(s);
+		ret.str = evalStr(s)[1..$-1];
 		ret.type = Token.VarType.tString;
 		src = src[s.length..$];
 	} else if(src[0] == '-') {
@@ -199,7 +246,7 @@ Token makeToken(ref string src, InputStream source, BraceType escapeFrom=BraceTy
 		// Recursion all up in this code
 		src = src[1..$];
 		ret.arr = tokenize(src, source, BraceType.bParen);
-		ret.type = Token.VarType.tCompoundStatement;
+		ret.type = Token.VarType.tArgumentList;
 	} else if(src[0] == '[') {
 		// Recursion all up in this code
 		src = src[1..$];
@@ -247,13 +294,12 @@ Token[] tokenize(ref string src, InputStream source, BraceType escapeFrom=BraceT
 	Token tmp;
 	
 	// Trim leading whitespace
-	while((src[0]=='\t') || (src[0]==' ')) {
-		src=src[1..$];
-	}
+	src = strip(src);
 	
 	if(!src.length) {
 		tmp.str = "null";
-		tmp.type = Token.VarType.tFunction;
+		tmp.type = Token.VarType.tBuiltin;
+		tmp.func = &bi_null;
 		ret ~= tmp;
 		return ret;
 	}

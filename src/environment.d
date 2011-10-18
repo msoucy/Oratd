@@ -1,14 +1,13 @@
 import token;
-import errors;
 import typedefs;
+import errors;
+import tokenize;
 import std.cstream;
-import std.stdio;
-import std.string;
-
 
 struct Environment {
 private:
 	typedef Token[string] Scope;
+public:
 	Token* evalVarname(string src) {
 		Token* ret;
 		int recastLoc = std.string.indexOf(src,'$');
@@ -29,18 +28,13 @@ private:
 		} else {
 			key = src[0..offsetLoc];
 			src = src[offsetLoc+1..$];
+			offsetLoc = std.string.indexOf(src,':');
 			while(offsetLoc != -1) {
 				offsets ~= src[0..offsetLoc];
 				src = src[offsetLoc+1..$];
 				offsetLoc = std.string.indexOf(src,':');
 			}
 			offsets ~= src;
-		}
-		writefln("Cast: `%s`", newcast);
-		writefln("Keys: `%s`", key);
-		writefln("Offsets:");
-		foreach(string o ; offsets) {
-			writefln("\t`%s`",o);
 		}
 		
 		foreach_reverse(Scope s ; scopes) {
@@ -53,15 +47,37 @@ private:
 			ret = &scopes[$-1][cast(string)(key)];
 		}
 		foreach(string o;offsets) {
-			// DO THIS NOW
-			// preprocess each offset string
-			// Evaluate the result
-			// Offset ret by that much
-			// If it's a function, and there are more offsets, throw an error
+			if(ret.type == Token.VarType.tArray) {
+				Token off = makeToken(o,din,BraceType.bNone);
+				off = eval(off);
+				if(off.type != Token.VarType.tNumeric) {
+					throw new OratrInvalidOffsetException(o);
+				}
+				if(ret.arr.length <= cast(uint)off.d) {
+					throw new OratrOutOfRangeException(src,cast(uint)off.d);
+				} else {
+					ret = &ret.arr[cast(uint)off.d];
+				}
+			} else if(ret.type == Token.VarType.tType) {
+				// Things are offset by data name, use the lookup table in env
+			} else {
+				throw new OratrInvalidOffsetException(vartypeToStr(ret.type));
+			}
 		}
 		return ret;
 	}
-public:
+	ref Token evalRawArray(ref Token src) {
+		Token[][] args;
+		args.length = 1;
+		foreach(tok;src.arr) {
+			if(tok.type == Token.VarType.tArrayElementSeperator) {
+				args.length += 1;
+			} else {
+				args[$-1] ~= tok;
+			}
+		}
+		return src;
+	}
 	Scope[] scopes;
 	void init() {
 		scopes.length = 1;
@@ -87,8 +103,10 @@ public:
 				break;
 			}
 			case Token.VarType.tRawArray: {
+				evalRawArray(src);
 				break;
 			}
+			case Token.VarType.tBuiltin:
 			case Token.VarType.tNumeric:
 			case Token.VarType.tString:
 			case Token.VarType.tOpcode:

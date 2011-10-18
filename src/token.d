@@ -1,37 +1,18 @@
 import bi_basics;
-import errors;
 import environment;
 import std.conv;
-import std.stdio;
-import std.string;
-import std.array;
 
 typedef Token function(ref Token[], ref Environment) Function;
 
 struct Token {
-private:
-	string _str = "";
 public:
 	enum VarType {
 		tNone,
-		tCode,
-		tCompoundStatement,
-		tString,
-		tNumeric,
-		tRawArray,
-		tArray,
+		tCode, tArgumentList, tString, tNumeric, tRawArray, tArray,
 		tVarname,
-		tType,
-		tFunction,
-		tOpcode,
-		tSpecial,
-		tBuiltin,
-		tCommandSeperator,
-		tArrayElementSeperator,
-		tVarOffsetSeperator,
-		tClosingParen,
-		tClosingBrace,
-		tClosingBracket,
+		tType, tFunction, tOpcode, tSpecial, tBuiltin, tRecast,
+		tCommandSeperator, tArrayElementSeperator,
+		tVarOffsetSeperator, tClosingParen, tClosingBrace, tClosingBracket,
 		tMax
 	}
 	Function func = &bi_basics.bi_null;
@@ -39,17 +20,14 @@ public:
 	Token[] arr;
 	this(real _d=0) {
 		d = _d;
+		type = VarType.tNumeric;
 	}
 	this(string _s) {
 		str = _s;
+		type = VarType.tString;
 	}
+	string str = "";
 	@property {
-		string str() {
-			return _str;
-		}
-		void str(string nval) {
-			_str = nval;
-		}
 		real d() {
 			try {
 				return to!real(str);
@@ -58,7 +36,7 @@ public:
 			}
 		}
 		void d(real _d) {
-			_str = to!(string)(_d);
+			str = to!(string)(_d);
 		}
 	}
 }
@@ -68,7 +46,7 @@ string vartypeToStr(Token.VarType v)
 	switch(v) {
 		case Token.VarType.tCode:
 			return "Code";
-		case Token.VarType.tCompoundStatement:
+		case Token.VarType.tArgumentList:
 			return "Compound Statement";
 		case Token.VarType.tString:
 			return "String";
@@ -92,6 +70,8 @@ string vartypeToStr(Token.VarType v)
 			return "Built In Function";
 		case Token.VarType.tCommandSeperator:
 			return "Command Seperator";
+		case Token.VarType.tRecast:
+			return "Cast operator";
 		case Token.VarType.tArrayElementSeperator:
 			return "Array Element Seperator";
 		case Token.VarType.tVarOffsetSeperator:
