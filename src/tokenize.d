@@ -246,7 +246,7 @@ Token makeToken(ref string src, InputStream source, BraceType escapeFrom=BraceTy
 		// Recursion all up in this code
 		src = src[1..$];
 		ret.arr = tokenize(src, source, BraceType.bParen);
-		ret.type = Token.VarType.tArgumentList;
+		ret.type = Token.VarType.tCompoundStatement;
 	} else if(src[0] == '[') {
 		// Recursion all up in this code
 		src = src[1..$];

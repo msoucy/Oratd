@@ -22,9 +22,10 @@ real _bi_numeric_math_solve(real a, string op, real b)
 		}
 	case "**":
 		return pow(a, b);
+	case "^^":
+		return a ^^ b;
 	case "%":
-		// math.modf requires the divisor to be a reference
-		return modf(a, b);
+		return a%b;
 	case "<<":
 		return a * pow(2,b);
 	case ">>":
@@ -77,29 +78,35 @@ Token _bi_math_solve(Token a, Token op, Token b)
 int Operator_Priority(string str)
 {
 	// Based on the C++ order of operations
-	if(str == "**") {
-		// Exponentiation
+	switch(str) {
+	case "**":
+	case "^^":
 		return 7;
-	} else if(str == "*" || str == "/" || str == "%") {
-		// Multiplication operators
+	case "*":
+	case "/":
+	case "%":
 		return 6;
-	} else if(str == "+" || str == "-") {
-		// Addition/subtraction
+	case "+":
+	case "-":
 		return 5;
-	} else if(str == "<<" || str == ">>" || str == ">>>") {
-		// Shift operators - I feel like those should be with the mults, but C priorities says otherwise
+	case "<<":
+	case ">>":
+	case ">>>":
 		return 4;
-	} else if(str == "==" || str == "!=" || str == ">" || str == ">=" || str == "<" || str == "<=") {
-		// (in)equality operators
+	case "==":
+	case "!=":
+	case ">":
+	case ">=":
+	case "<":
+	case "<=":
 		return 3;
-	} else if(str == "|" || str == "&" || str == "^") {
-		// Bitwise operators
+	case "|":
+	case "&":
+	case "^":
 		return 2;
-	} else if(str == "~") {
-		// Concatenation operator - lowest so you can concatenate expressions
+	case "~":
 		return 1;
-	} else {
-		// It's not a valid operator - sorry, no custom operators
+	default:
 		return 0;
 	}
 }
@@ -197,4 +204,97 @@ Token bi_math(ref Token[] argv, ref Environment env)
 	}
 	
 	return s[$-1];
+}
+
+Token bi_trim(ref Token[] argv, ref  Environment env)
+{
+	// Trim a number to a precision, or a string's leading/trailing signs (default whitespace)
+	Token ret;
+	if(argv.length == 1) {
+		ret = argv[0];
+		ret = env.eval(ret);
+		if(ret.type != Token.VarType.tString) {
+			throw new OratrInvalidArgumentException(vartypeToStr(ret.type),0);
+		}
+		ret.str = strip(ret.str);
+	} else if(argv.length == 2 ) {
+		// It has to be a number - trim the decimals
+		ret = argv[0];
+		ret = env.eval(ret);
+		if(ret.type == Token.VarType.tNumeric) {
+			Token precision = argv[1];
+			precision = env.eval(precision);
+			if(precision.type != Token.VarType.tString) {
+				throw new OratrInvalidArgumentException(vartypeToStr(precision.type),1);
+			}
+			ret.str = format(format("%%%sf",precision.str),ret.d);
+		} else if(ret.type == Token.VarType.tString) {
+			Token delims = argv[1];
+			delims = env.eval(delims);
+			if(delims.type != Token.VarType.tString) {
+				throw new OratrInvalidArgumentException(vartypeToStr(delims.type),1);
+			}
+			while(ret.str.length && inPattern(ret.str[0],delims.str)) {
+				ret.str = ret.str[1..$];
+			}
+			while(ret.str.length && inPattern(ret.str[$-1],delims.str)) {
+				ret.str = ret.str[0..$-1];
+			}
+		} else {
+			throw new OratrInvalidArgumentException(vartypeToStr(ret.type),0);
+		}
+	} else {
+		throw new OratrArgumentCountException(argv.length,"trim","1-2");
+	}
+	return ret;
+}
+
+Token bi_slice(ref Token[] argv, ref  Environment env)
+{
+	Token ret;
+	if(argv.length == 3) {
+		// It's an array or a string
+		ret = argv[0];
+		ret = env.eval(ret);
+		Token start = argv[1];
+		start = env.eval(start);
+		if(start.type != Token.VarType.tNumeric) {
+			throw new OratrInvalidArgumentException(vartypeToStr(start.type),1);
+		}
+		Token stop = argv[2];
+		stop = env.eval(stop);
+		if(stop.type != Token.VarType.tNumeric) {
+			throw new OratrInvalidArgumentException(vartypeToStr(stop.type),2);
+		}
+		if(start.d < 0) {
+			throw new OratrOutOfRangeException("",cast(int)start.d);
+		}
+		start.d = cast(uint)start.d;
+		stop.d = cast(uint)stop.d;
+		if(ret.type == Token.VarType.tString) {
+			if(stop.d >= ret.str.length) {
+				throw new OratrOutOfRangeException("string", cast(int)stop.d);
+			}
+			if(stop.d >= start.d) {
+				ret.str = ret.str[cast(uint)start.d .. cast(uint)stop.d];
+			} else {
+				ret.str = ret.str[cast(uint)stop.d .. cast(uint)start.d].reverse;
+			}
+		} else if(ret.type == Token.VarType.tArray) {
+			if(stop.d >= ret.arr.length) {
+				throw new OratrOutOfRangeException("", cast(int)stop.d);
+			}
+			if(stop.d >= start.d) {
+				ret.arr = ret.arr[cast(uint)start.d .. cast(uint)stop.d];
+			} else {
+				ret.arr = ret.arr[cast(uint)stop.d .. cast(uint)start.d].reverse;
+			}
+		} else {
+			throw new OratrInvalidArgumentException(vartypeToStr(ret.type),0);
+		}
+	} else {
+		// Expand for start...stop...step?
+		throw new OratrArgumentCountException(argv.length,"slice","3-4");
+	}
+	return ret;
 }

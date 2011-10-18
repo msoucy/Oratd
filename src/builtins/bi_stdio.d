@@ -10,11 +10,12 @@ string makeString(ref Token tok, ref Environment env)
 	string ret;
 	switch(tok.type) {
 		case Token.VarType.tNumeric: {
-			ret = format(format("%%%ff",env.evalVarname("__precision__").d),tok.d);
+			ret = format("%s",tok.str);
 			break;
 		}
 		case Token.VarType.tOpcode:
 		case Token.VarType.tString:
+		case Token.VarType.tTypeID:
 		case Token.VarType.tSpecial: {
 			ret = format("%s", tok.str);
 			break;
@@ -58,7 +59,7 @@ string makeString(ref Token tok, ref Environment env)
 			ret = "<special token \""~vartypeToStr(tok.type)~"\">";
 			break;
 		}
-		case Token.VarType.tArgumentList:
+		case Token.VarType.tCompoundStatement:
 			ret = format("(argument list)");
 			break;
 		case Token.VarType.tCode:
@@ -78,6 +79,7 @@ Token _bi_printto(ref Token[] argv, ref Environment env, OutputStream ostr)
 {
 	Token retval;
 	foreach(ref ret;argv) {
+		// Crashes below
 		ret = env.eval(ret);
 		if(ret.type == Token.VarType.tString) {
 			ostr.writef("%s", ret.str);

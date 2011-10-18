@@ -1,6 +1,7 @@
 import bi_basics;
 import environment;
 import std.conv;
+import std.cstream;
 
 typedef Token function(ref Token[], ref Environment) Function;
 
@@ -8,8 +9,8 @@ struct Token {
 public:
 	enum VarType {
 		tNone,
-		tCode, tArgumentList, tString, tNumeric, tRawArray, tArray,
-		tVarname,
+		tCode, tCompoundStatement, tString, tNumeric, tRawArray, tArray,
+		tVarname, tTypeID,
 		tType, tFunction, tOpcode, tSpecial, tBuiltin, tRecast,
 		tCommandSeperator, tArrayElementSeperator,
 		tVarOffsetSeperator, tClosingParen, tClosingBrace, tClosingBracket,
@@ -32,7 +33,7 @@ public:
 			try {
 				return to!real(str);
 			} catch (Exception e) {
-				return 0;
+				return 3;
 			}
 		}
 		void d(real _d) {
@@ -46,7 +47,7 @@ string vartypeToStr(Token.VarType v)
 	switch(v) {
 		case Token.VarType.tCode:
 			return "Code";
-		case Token.VarType.tArgumentList:
+		case Token.VarType.tCompoundStatement:
 			return "Compound Statement";
 		case Token.VarType.tString:
 			return "String";
@@ -58,6 +59,8 @@ string vartypeToStr(Token.VarType v)
 			return "Array";
 		case Token.VarType.tVarname:
 			return "Variable Name";
+		case Token.VarType.tTypeID:
+			return "Type ID";
 		case Token.VarType.tType:
 			return "";
 		case Token.VarType.tFunction:

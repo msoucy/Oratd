@@ -38,3 +38,17 @@ Token bi_set(ref Token[] argv, ref Environment env)
 	}
 	return ret;
 }
+
+Token bi_typeid(ref Token[] argv, ref Environment env) {
+	if(argv.length != 1) {
+		throw new OratrArgumentCountException(argv.length,"typeid","1");
+	}
+	Token ret;
+	ret.type = Token.VarType.tTypeID;
+	ret.str = vartypeToStr(argv[0].type);
+	return ret;
+}
+
+Token bi_tell(ref Token[] argv, ref Environment env) {
+	assert(0);
+}

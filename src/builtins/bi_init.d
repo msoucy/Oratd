@@ -12,11 +12,18 @@ template AddFunc(string name, string funcname="bi_"~name) {
 }
 
 void init_builtins(ref Environment env) {
+	// Basic constructs and functions
 	mixin(AddFunc!("null"));
+	// I/O
 	mixin(AddFunc!("echo"));
-	mixin(AddFunc!("set"));
 	mixin(AddFunc!("print"));
 	mixin(AddFunc!("echo"));
 	mixin(AddFunc!("get"));
+	// Variables
+	mixin(AddFunc!("set"));
+	mixin(AddFunc!("typeid"));
+	mixin(AddFunc!("trim"));
+	mixin(AddFunc!("slice"));
+	// Math
 	mixin(AddFunc!("math", "bi_math.bi_math"));
 }

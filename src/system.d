@@ -32,13 +32,14 @@ int charToInt(char c) {
 	return 0;
 }
 
-double strToDouble(string str, int base)
+real strToDouble(string str, int base)
 {
 	// Assume that the input string is well-formed
 	// The lexer will handle that.
 	if(base != 10 && base != 2 && base != 8 && base != 16) return 0;
-	double ret = 0;
-	int mantissa = 0;
+	real ret = 0;
+	real mantissa = 0;
+	
 	
 	for(uint i=0;i<str.length;i++) {
 		if(str[i] == '.') {
@@ -46,7 +47,8 @@ double strToDouble(string str, int base)
 		} else {
 			if(mantissa != 0) {
 				// We're "below" the mantissa
-				ret += charToInt(str[i]) * pow(base, -mantissa);
+				ret += charToInt(str[i])* (base ^^ (-mantissa));
+				//ret += charToInt(str[i]) * pow(base, cast(int)(-mantissa));
 				mantissa++;
 			} else {
 				// We're still "above" the mantissa

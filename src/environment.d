@@ -106,16 +106,8 @@ public:
 				evalRawArray(src);
 				break;
 			}
-			case Token.VarType.tBuiltin:
-			case Token.VarType.tNumeric:
-			case Token.VarType.tString:
-			case Token.VarType.tOpcode:
-			case Token.VarType.tSpecial:
-			case Token.VarType.tArray: {
-				ret = &src;
-				break;
-			}
 			default: {
+				ret = &src;
 				break;
 			}
 		}

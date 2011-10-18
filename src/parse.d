@@ -3,6 +3,7 @@ import environment;
 import errors;
 import bi_math;
 import bi_vars;
+import bi_stdio;
 import std.cstream;
 
 bool isSettingOpcode(string s)
@@ -53,7 +54,7 @@ Token[] condenseArguments(ref Token[] argv, ref Environment env) {
 				argv[i].arr ~= *env.evalVarname("__return__");
 			}
 			argv[i].type = Token.VarType.tArray;
-		} else if(argv[i].type == Token.VarType.tArgumentList) {
+		} else if(argv[i].type == Token.VarType.tCompoundStatement) {
 			parse(argv[i].arr, env);
 			argv[i] = *env.evalVarname("__return__");
 		} else if(argv[i].type == Token.VarType.tArrayElementSeperator) {
