@@ -4,6 +4,12 @@ import errors;
 import tokenize;
 import std.cstream;
 
+template AddFunc(string name, string funcname="bi_"~name) {
+	const char[] AddFunc =  "env.scopes[0][\""~name~"\"] = Token(\""~name~"\");" ~
+							"env.scopes[0][\""~name~"\"].func = &"~funcname~";" ~
+							"env.scopes[0][\""~name~"\"].type = Token.VarType.tBuiltin;"; 
+}
+
 struct Environment {
 private:
 	typedef Token[string] Scope;

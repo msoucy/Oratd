@@ -2,6 +2,7 @@ import bi_basics;
 import environment;
 import std.conv;
 import std.cstream;
+import std.string;
 
 typedef Token function(ref Token[], ref Environment) Function;
 
@@ -39,6 +40,29 @@ public:
 		void d(real _d) {
 			str = to!(string)(_d);
 		}
+		void pd(real _d) {
+			str = format("%f",_d);
+		}
+	}
+	// Helper functions that let me do construction-time editing
+	ref Token withPreciseNumeric(real _d) {
+		pd = _d;
+		type = VarType.tNumeric;
+		return this;
+	}
+	ref Token withNumeric(real _d) {
+		d = _d;
+		type = VarType.tNumeric;
+		return this;
+	}
+	ref Token withType(VarType t) {
+		type = t;
+		return this;
+	}
+	ref Token withArray(uint s) {
+		type = VarType.tArray;
+		arr.length = s;
+		return this;
 	}
 }
 

@@ -5,6 +5,14 @@ import errors;
 import std.cstream;
 import std.string;
 
+void import_stdio(ref Environment env) {
+	// I/O
+	mixin(AddFunc!("echo"));
+	mixin(AddFunc!("print"));
+	mixin(AddFunc!("echo"));
+	mixin(AddFunc!("get"));
+}
+
 string makeString(ref Token tok, ref Environment env)
 {
 	string ret;
@@ -67,7 +75,8 @@ string makeString(ref Token tok, ref Environment env)
 			ret = format("<code>");
 			break;
 		case Token.VarType.tNone:
-		case Token.VarType.tMax:
+			ret = format("<none>");
+			break;
 		default:
 			ret = format("<invalid token>");
 			break;
@@ -108,9 +117,8 @@ Token bi_print(ref Token[] argv, ref Environment env)
 Token bi_get(ref Token[] argv, ref Environment env)
 {
 	Token ret;
-	int argc = argv.length;
-	if(argc) {
-		throw new OratrArgumentCountException(0,"get","0");
+	if(argv.length) {
+		throw new OratrArgumentCountException(argv.length,"get","0");
 	}
 	char[] str;
 	do{

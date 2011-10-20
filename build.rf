@@ -1,3 +1,4 @@
+-w
 -od"bin"
 -of"bin/Oratd"
 
@@ -7,6 +8,7 @@
 "src/builtins/bi_init.d"
 "src/builtins/bi_math.d"
 "src/builtins/bi_stdio.d"
+"src/builtins/bi_system.d"
 "src/builtins/bi_vars.d"
 "src/environment.d"
 "src/errors.d"

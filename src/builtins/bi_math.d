@@ -1,9 +1,36 @@
 import token;
 import environment;
 import errors;
-import std.string;
 import std.cstream;
 import std.math;
+import std.random;
+
+void import_math(ref Environment env) {
+	// Math
+	mixin(AddFunc!("math"));
+	mixin(AddFunc!("rand"));
+	mixin(AddFunc!("frand"));
+	// Trig - a category of its own <_<
+	mixin(AddFunc!("sin"));
+	mixin(AddFunc!("cos"));
+	mixin(AddFunc!("tan"));
+	mixin(AddFunc!("asin"));
+	mixin(AddFunc!("acos"));
+	mixin(AddFunc!("atan"));
+	mixin(AddFunc!("sinh"));
+	mixin(AddFunc!("cosh"));
+	mixin(AddFunc!("tanh"));
+	mixin(AddFunc!("asinh"));
+	mixin(AddFunc!("acosh"));
+	mixin(AddFunc!("atanh"));
+	mixin(AddFunc!("abs"));
+	
+	// Rounding errors cause problems in precision for PI and trig operations
+	// Manually specify more precision
+	env.scopes[0]["PI"] = Token().withType(Token.VarType.tNumeric).withPreciseNumeric(PI);
+	env.scopes[0]["E"] = Token().withType(Token.VarType.tNumeric).withPreciseNumeric(E);
+	env.scopes[0]["SQRT2"] = Token().withType(Token.VarType.tNumeric).withPreciseNumeric(SQRT2);
+}
 
 real _bi_numeric_math_solve(real a, string op, real b)
 {
@@ -21,11 +48,10 @@ real _bi_numeric_math_solve(real a, string op, real b)
 			return real.nan;
 		}
 	case "**":
-		return pow(a, b);
 	case "^^":
-		return a ^^ b;
+		return pow(a, b);
 	case "%":
-		return a%b;
+		return remainder(a,b);
 	case "<<":
 		return a * pow(2,b);
 	case ">>":
@@ -38,6 +64,10 @@ real _bi_numeric_math_solve(real a, string op, real b)
 		return cast(int)a & cast(int)b;
 	case "^":
 		return cast(int)a ^ cast(int)b;
+	case "<?":
+		return fmin(a,b);
+	case ">?":
+		return fmax(a,b);
 	default:
 		return real.nan;
 	}
@@ -81,17 +111,20 @@ int Operator_Priority(string str)
 	switch(str) {
 	case "**":
 	case "^^":
-		return 7;
+		return 8;
 	case "*":
 	case "/":
 	case "%":
-		return 6;
+		return 7;
 	case "+":
 	case "-":
-		return 5;
+		return 6;
 	case "<<":
 	case ">>":
 	case ">>>":
+		return 5;
+	case "<?":
+	case ">?":
 		return 4;
 	case "==":
 	case "!=":
@@ -161,7 +194,6 @@ Token bi_math(ref Token[] argv, ref Environment env)
 		}
 		default: {
 			throw new OratrInvalidArgumentException(token.vartypeToStr(argv[i].type), i);
-			break;
 		}
 		};
 	}
@@ -198,7 +230,6 @@ Token bi_math(ref Token[] argv, ref Environment env)
 		default: {
 			// It should never reach this, but just in case...
 			throw new OratrInvalidArgumentException(token.vartypeToStr(argv[i].type), i);
-			break;
 		}
 		};
 	}
@@ -206,95 +237,288 @@ Token bi_math(ref Token[] argv, ref Environment env)
 	return s[$-1];
 }
 
-Token bi_trim(ref Token[] argv, ref  Environment env)
+Token bi_rand(ref Token[] argv, ref Environment env)
 {
-	// Trim a number to a precision, or a string's leading/trailing signs (default whitespace)
-	Token ret;
-	if(argv.length == 1) {
-		ret = argv[0];
-		ret = env.eval(ret);
-		if(ret.type != Token.VarType.tString) {
-			throw new OratrInvalidArgumentException(vartypeToStr(ret.type),0);
+	Token ret = 0;
+	switch(argv.length) {
+	case 0: {
+		ret.d = uniform!long();
+		break;
+	}
+	case 1: {
+		Token high = argv[0];
+		high = env.eval(high);
+		if(high.type != Token.VarType.tNumeric) {
+			throw new OratrInvalidArgumentException(vartypeToStr(high.type),0);
 		}
-		ret.str = strip(ret.str);
-	} else if(argv.length == 2 ) {
-		// It has to be a number - trim the decimals
-		ret = argv[0];
-		ret = env.eval(ret);
-		if(ret.type == Token.VarType.tNumeric) {
-			Token precision = argv[1];
-			precision = env.eval(precision);
-			if(precision.type != Token.VarType.tString) {
-				throw new OratrInvalidArgumentException(vartypeToStr(precision.type),1);
-			}
-			ret.str = format(format("%%%sf",precision.str),ret.d);
-		} else if(ret.type == Token.VarType.tString) {
-			Token delims = argv[1];
-			delims = env.eval(delims);
-			if(delims.type != Token.VarType.tString) {
-				throw new OratrInvalidArgumentException(vartypeToStr(delims.type),1);
-			}
-			while(ret.str.length && inPattern(ret.str[0],delims.str)) {
-				ret.str = ret.str[1..$];
-			}
-			while(ret.str.length && inPattern(ret.str[$-1],delims.str)) {
-				ret.str = ret.str[0..$-1];
-			}
-		} else {
-			throw new OratrInvalidArgumentException(vartypeToStr(ret.type),0);
+		// Assume a minimum of 0
+		ret.d = uniform(0,cast(uint)high.d);
+		break;
+	}
+	case 2: {
+		Token low = argv[0];
+		Token high = argv[1];
+		low = env.eval(low);
+		high = env.eval(high);
+		if(low.type != Token.VarType.tNumeric) {
+			throw new OratrInvalidArgumentException(vartypeToStr(low.type),0);
 		}
-	} else {
-		throw new OratrArgumentCountException(argv.length,"trim","1-2");
+		if(high.type != Token.VarType.tNumeric) {
+			throw new OratrInvalidArgumentException(vartypeToStr(high.type),1);
+		}
+		ret.d = uniform(cast(uint)low.d,cast(uint)high.d);
+		break;
+	}
+	default: {
+		throw new OratrArgumentCountException(argv.length,"rand","0-2");
+	}
 	}
 	return ret;
 }
 
-Token bi_slice(ref Token[] argv, ref  Environment env)
+Token bi_frand(ref Token[] argv, ref Environment env)
 {
-	Token ret;
-	if(argv.length == 3) {
-		// It's an array or a string
-		ret = argv[0];
-		ret = env.eval(ret);
-		Token start = argv[1];
-		start = env.eval(start);
-		if(start.type != Token.VarType.tNumeric) {
-			throw new OratrInvalidArgumentException(vartypeToStr(start.type),1);
+	Token ret = 0;
+	switch(argv.length) {
+	case 0: {
+		ret.d = uniform!long();
+		break;
+	}
+	case 1: {
+		Token high = argv[0];
+		high = env.eval(high);
+		if(high.type != Token.VarType.tNumeric) {
+			throw new OratrInvalidArgumentException(vartypeToStr(high.type),0);
 		}
-		Token stop = argv[2];
-		stop = env.eval(stop);
-		if(stop.type != Token.VarType.tNumeric) {
-			throw new OratrInvalidArgumentException(vartypeToStr(stop.type),2);
+		// Assume a minimum of 0
+		ret.d = uniform(0.0,high.d);
+		break;
+	}
+	case 2: {
+		Token low = argv[0];
+		Token high = argv[1];
+		low = env.eval(low);
+		high = env.eval(high);
+		if(low.type != Token.VarType.tNumeric) {
+			throw new OratrInvalidArgumentException(vartypeToStr(low.type),0);
 		}
-		if(start.d < 0) {
-			throw new OratrOutOfRangeException("",cast(int)start.d);
+		if(high.type != Token.VarType.tNumeric) {
+			throw new OratrInvalidArgumentException(vartypeToStr(high.type),1);
 		}
-		start.d = cast(uint)start.d;
-		stop.d = cast(uint)stop.d;
-		if(ret.type == Token.VarType.tString) {
-			if(stop.d >= ret.str.length) {
-				throw new OratrOutOfRangeException("string", cast(int)stop.d);
-			}
-			if(stop.d >= start.d) {
-				ret.str = ret.str[cast(uint)start.d .. cast(uint)stop.d];
-			} else {
-				ret.str = ret.str[cast(uint)stop.d .. cast(uint)start.d].reverse;
-			}
-		} else if(ret.type == Token.VarType.tArray) {
-			if(stop.d >= ret.arr.length) {
-				throw new OratrOutOfRangeException("", cast(int)stop.d);
-			}
-			if(stop.d >= start.d) {
-				ret.arr = ret.arr[cast(uint)start.d .. cast(uint)stop.d];
-			} else {
-				ret.arr = ret.arr[cast(uint)stop.d .. cast(uint)start.d].reverse;
-			}
-		} else {
-			throw new OratrInvalidArgumentException(vartypeToStr(ret.type),0);
-		}
-	} else {
-		// Expand for start...stop...step?
-		throw new OratrArgumentCountException(argv.length,"slice","3-4");
+		ret.d = uniform(low.d,high.d);
+		break;
+	}
+	default: {
+		throw new OratrArgumentCountException(argv.length,"frand","0-2");
+	}
 	}
 	return ret;
 }
+
+Token bi_sin(ref Token[] argv, ref Environment env)
+{
+	if(argv.length != 1) {
+		throw new OratrArgumentCountException(argv.length,"sin","1");
+	}
+	Token ret = argv[0];
+	ret = env.eval(ret);
+	ret.d = sin(ret.d);
+	if(approxEqual(ret.d,0)) {
+		ret.d = 0;
+	}
+	return ret;
+}
+
+Token bi_cos(ref Token[] argv, ref Environment env)
+{
+	if(argv.length != 1) {
+		throw new OratrArgumentCountException(argv.length,"cos","1");
+	}
+	Token ret = argv[0];
+	ret = env.eval(ret);
+	ret.d = cos(ret.d);
+	if(approxEqual(ret.d,0)) {
+		ret.d = 0;
+	}
+	return ret;
+}
+
+Token bi_tan(ref Token[] argv, ref Environment env)
+{
+	if(argv.length != 1) {
+		throw new OratrArgumentCountException(argv.length,"sin","1");
+	}
+	Token ret = argv[0];
+	ret = env.eval(ret);
+	ret.d = tan(ret.d);
+	if(approxEqual(ret.d,0)) {
+		ret.d = 0;
+	}
+	return ret;
+}
+
+Token bi_asin(ref Token[] argv, ref Environment env)
+{
+	if(argv.length != 1) {
+		throw new OratrArgumentCountException(argv.length,"sin","1");
+	}
+	Token ret = argv[0];
+	ret = env.eval(ret);
+	ret.d = asin(ret.d);
+	if(approxEqual(ret.d,0)) {
+		ret.d = 0;
+	}
+	return ret;
+}
+
+Token bi_acos(ref Token[] argv, ref Environment env)
+{
+	if(argv.length != 1) {
+		throw new OratrArgumentCountException(argv.length,"sin","1");
+	}
+	Token ret = argv[0];
+	ret = env.eval(ret);
+	ret.d = acos(ret.d);
+	if(approxEqual(ret.d,0)) {
+		ret.d = 0;
+	}
+	return ret;
+}
+
+Token bi_atan(ref Token[] argv, ref Environment env)
+{
+	if(argv.length != 1) {
+		throw new OratrArgumentCountException(argv.length,"sin","1");
+	}
+	Token ret = argv[0];
+	ret = env.eval(ret);
+	ret.d = atan(ret.d);
+	if(approxEqual(ret.d,0)) {
+		ret.d = 0;
+	}
+	return ret;
+}
+
+Token bi_sinh(ref Token[] argv, ref Environment env)
+{
+	if(argv.length != 1) {
+		throw new OratrArgumentCountException(argv.length,"sin","1");
+	}
+	Token ret = argv[0];
+	ret = env.eval(ret);
+	ret.d = sinh(ret.d);
+	if(approxEqual(ret.d,0)) {
+		ret.d = 0;
+	}
+	return ret;
+}
+
+Token bi_cosh(ref Token[] argv, ref Environment env)
+{
+	if(argv.length != 1) {
+		throw new OratrArgumentCountException(argv.length,"cos","1");
+	}
+	Token ret = argv[0];
+	ret = env.eval(ret);
+	ret.d = cosh(ret.d);
+	if(approxEqual(ret.d,0)) {
+		ret.d = 0;
+	}
+	return ret;
+}
+
+Token bi_tanh(ref Token[] argv, ref Environment env)
+{
+	if(argv.length != 1) {
+		throw new OratrArgumentCountException(argv.length,"sin","1");
+	}
+	Token ret = argv[0];
+	ret = env.eval(ret);
+	ret.d = tanh(ret.d);
+	if(approxEqual(ret.d,0)) {
+		ret.d = 0;
+	}
+	return ret;
+}
+
+Token bi_asinh(ref Token[] argv, ref Environment env)
+{
+	if(argv.length != 1) {
+		throw new OratrArgumentCountException(argv.length,"sin","1");
+	}
+	Token ret = argv[0];
+	ret = env.eval(ret);
+	ret.d = asinh(ret.d);
+	if(approxEqual(ret.d,0)) {
+		ret.d = 0;
+	}
+	return ret;
+}
+
+Token bi_acosh(ref Token[] argv, ref Environment env)
+{
+	if(argv.length != 1) {
+		throw new OratrArgumentCountException(argv.length,"sin","1");
+	}
+	Token ret = argv[0];
+	ret = env.eval(ret);
+	ret.d = acosh(ret.d);
+	if(approxEqual(ret.d,0)) {
+		ret.d = 0;
+	}
+	return ret;
+}
+
+Token bi_atanh(ref Token[] argv, ref Environment env)
+{
+	if(argv.length != 1) {
+		throw new OratrArgumentCountException(argv.length,"sin","1");
+	}
+	Token ret = argv[0];
+	ret = env.eval(ret);
+	ret.d = atanh(ret.d);
+	if(approxEqual(ret.d,0)) {
+		ret.d = 0;
+	}
+	return ret;
+}
+
+Token bi_log(ref Token[] argv, ref Environment env)
+{
+	Token ret;
+	if(argv.length == 1) {
+		ret = argv[0];
+		ret = env.eval(ret);
+		ret.d = log(ret.d);
+		if(approxEqual(ret.d,0)) {
+			ret.d = 0;
+		}
+	} else if(argv.length == 2) {
+		Token base = argv[0];
+		base = env.eval(base);
+		ret = argv[1];
+		ret = env.eval(ret);
+		ret.d = log(ret.d)/log(base.d);
+		if(approxEqual(ret.d,0)) {
+			ret.d = 0;
+		}
+	} else {
+		throw new OratrArgumentCountException(argv.length,"sin","1");
+	}
+	return ret;
+}
+
+Token bi_abs(ref Token[] argv, ref Environment env)
+{
+	if(argv.length != 1) {
+		throw new OratrArgumentCountException(argv.length,"sin","1");
+	}
+	Token ret = argv[0];
+	ret = env.eval(ret);
+	ret.d = fabs(ret.d);
+	if(approxEqual(ret.d,0)) {
+		ret.d = 0;
+	}
+	return ret;
+}
+
