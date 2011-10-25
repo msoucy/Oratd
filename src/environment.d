@@ -2,6 +2,7 @@ import token;
 import typedefs;
 import errors;
 import tokenize;
+import parse;
 import std.cstream;
 
 template AddFunc(string name, string funcname="bi_"~name) {
@@ -104,6 +105,11 @@ public:
 	ref Token eval(ref Token src) {
 		Token* ret;
 		switch(src.type) {
+			case Token.VarType.tCompoundStatement: {
+				parse.parse(src.arr, this);
+				ret = evalVarname("__return__"); 
+				break;
+			}
 			case Token.VarType.tVarname: {
 				ret = evalVarname(src.str);
 				break;

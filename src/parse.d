@@ -107,6 +107,9 @@ ref Environment parse(ref Token[] argv, ref Environment env)
 			case Token.VarType.tArray:
 				runCode = (cond.arr.length != 0);
 				break;
+			case Token.VarType.tString:
+				runCode = (cond.str != "");
+				break;
 			default:
 				break;
 			}
@@ -130,6 +133,49 @@ ref Environment parse(ref Token[] argv, ref Environment env)
 				} else {
 					throw new OratrArgumentCountException(
 						arglist.length,"\b\b\b\b\b\b\b\b\bcontrol structure if","3+ matching tokens and");
+				}
+			}
+		} else if(arglist[0].str == "switch" && arglist[0].type == Token.VarType.tVarname) {
+			// switch gets hijacked here for a variety of reasons
+			if(arglist.length < 4) {
+				throw new OratrArgumentCountException(
+					arglist.length,"\b\b\b\b\b\b\b\b\bcontrol structure switch","4+ matching tokens and");
+			}
+			condenseArguments(arglist,env,CondenserParam.ignoreCodeParts);
+			Token baseValue = arglist[1];
+			baseValue = env.eval(baseValue);
+			if(baseValue.type != Token.VarType.tNumeric && baseValue.type != Token.VarType.tString) {
+				throw new OratrInvalidArgumentException(vartypeToStr(baseValue.type),1);
+			}
+			execStatement:
+			for(uint i=2;i<arglist.length;i++) {
+				Token val = arglist[i];
+				bool runCode = false;
+				if(val.str == "default" && val.type == Token.VarType.tVarname) {
+					runCode = true;
+				} else {
+					val = env.eval(val);
+					switch(baseValue.type) {
+					case Token.VarType.tNumeric:
+						runCode = (baseValue.d == val.d);
+						break;
+					case Token.VarType.tString:
+						runCode = (baseValue.str == val.str);
+						break;
+					case Token.VarType.tArray:
+						runCode = (baseValue.arr == val.arr);
+						break;
+					default:
+						break;
+					}
+				}
+				if(runCode) {
+					foreach(tok;arglist[i+1..$]) {
+						if(tok.type == Token.VarType.tCode) {
+							parse(tok.arr,env);
+							break execStatement;
+						}
+					}
 				}
 			}
 		} else {
