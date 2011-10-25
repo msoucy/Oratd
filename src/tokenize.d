@@ -302,11 +302,17 @@ Token[] tokenize(ref string src, InputStream source, BraceType escapeFrom=BraceT
 	src = strip(src);
 	
 	if(!src.length) {
-		tmp.str = "null";
-		tmp.type = Token.VarType.tBuiltin;
-		tmp.func = &bi_null;
-		ret ~= tmp;
-		return ret;
+		// Handle special cases of empty strings
+		if(escapeFrom == BraceType.bNone) {
+			tmp.str = "null";
+			tmp.type = Token.VarType.tBuiltin;
+			tmp.func = &bi_null;
+			ret ~= tmp;
+			return ret;
+		} else {
+			dout.writef("> ");
+			src ~= getNextLine(source);
+		}
 	}
 	
 	do {
@@ -316,6 +322,13 @@ Token[] tokenize(ref string src, InputStream source, BraceType escapeFrom=BraceT
 			case Token.VarType.tClosingBrace:
 			case Token.VarType.tClosingBracket: {
 				// Just return the expression
+				if(!ret.length) {
+					// Make sure it returns a value
+					tmp.str = "null";
+					tmp.type = Token.VarType.tBuiltin;
+					tmp.func = &bi_null;
+					ret ~= tmp;					
+				}
 				return ret;
 			}
 			default: {

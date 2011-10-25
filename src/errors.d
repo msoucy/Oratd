@@ -38,6 +38,15 @@ class OratrArgumentCountException : OratrBaseException {
     }
 }
 
+class OratrArgumentCountExceptionControlStructure : OratrBaseException {
+	this( uint count, string func, string possible, string file = __FILE__, size_t line = __LINE__ )
+    {
+        super( "Invalid argument count "~to!string(count)~" in control structure "~func
+        	~" accepting "~to!string(possible)~" arguments",
+        	file, line );
+    }
+}
+
 class OratrInvalidOffsetException : OratrBaseException {
 	this( string type, string file = __FILE__, size_t line = __LINE__ )
     {
