@@ -22,6 +22,13 @@ class OratrInvalidArgumentException : OratrBaseException {
     }
 }
 
+class OratrInvalidCodeException : OratrBaseException {
+	this( string file = __FILE__, size_t line = __LINE__ )
+    {
+        super( "Expected code in conditional", file, line );
+    }
+}
+
 class OratrArgumentCountException : OratrBaseException {
 	this( uint count, string func, string possible, string file = __FILE__, size_t line = __LINE__ )
     {

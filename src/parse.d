@@ -28,7 +28,11 @@ bool isSettingOpcode(string s)
 	);
 }
 
-Token[] condenseArguments(ref Token[] argv, ref Environment env) {
+enum CondenserParam {
+	ignoreCodeParts=0x1
+};
+
+Token[] condenseArguments(ref Token[] argv, ref Environment env, uint params=0) {
 	// Concatenate VarNames with the extensions they need
 	for(sizediff_t i = 0;i<argv.length;i++) {
 		if(argv[i].type == Token.VarType.tVarname) {
@@ -56,7 +60,7 @@ Token[] condenseArguments(ref Token[] argv, ref Environment env) {
 				argv[i].arr ~= *env.evalVarname("__return__");
 			}
 			argv[i].type = Token.VarType.tArray;
-		} else if(argv[i].type == Token.VarType.tCompoundStatement) {
+		} else if(argv[i].type == Token.VarType.tCompoundStatement && !(params&CondenserParam.ignoreCodeParts)) {
 			parse(argv[i].arr, env);
 			argv[i] = *env.evalVarname("__return__");
 		} else if(argv[i].type == Token.VarType.tArrayElementSeperator) {
@@ -81,20 +85,69 @@ ref Environment parse(ref Token[] argv, ref Environment env)
 	}
 	foreach(arglist;args) {
 		if(!arglist.length) {continue;}
-		condenseArguments(arglist,env);
-		Token func = arglist[0];
-		func = env.eval(func);
-		if(func.type == Token.VarType.tBuiltin) {
-			arglist = arglist[1..$];
-			ret = func.func(arglist,env);
-		} else if(func.type == Token.VarType.tFunction) {
-			// Execute the new code
-		} else {
-			// Work out the whole math thing
-			if(arglist.length > 2 && isSettingOpcode(arglist[1].str)) {
-				ret = bi_set(arglist,env);
+		if(arglist[0].str == "if" && arglist[0].type == Token.VarType.tVarname) {
+			// if gets hijacked here for a variety of reasons
+			if(arglist.length < 3) {
+				throw new OratrArgumentCountException(
+					arglist.length,"\b\b\b\b\b\b\b\b\bcontrol structure if","3+ matching tokens and");
+			}
+			condenseArguments(arglist,env,CondenserParam.ignoreCodeParts);
+			Token cond = arglist[1];
+			cond = env.eval(cond);
+			Token code = arglist[2];
+			code = env.eval(code);
+			if(code.type != Token.VarType.tCode) {
+				throw new OratrInvalidCodeException();
+			}
+			bool runCode = false;
+			switch(cond.type) {
+			case Token.VarType.tNumeric:
+				runCode = cond.d != 0;
+				break;
+			case Token.VarType.tArray:
+				runCode = (cond.arr.length != 0);
+				break;
+			default:
+				break;
+			}
+			if(runCode) {
+				parse(code.arr,env);
 			} else {
-				ret = bi_math.bi_math(arglist,env);
+				if(arglist.length >= 5 && arglist[3].str == "else" && arglist[3].type == Token.VarType.tVarname) {
+					if(arglist.length == 5) {
+						code = arglist[4];
+						code = env.eval(code);
+						if(code.type != Token.VarType.tCode) {
+							throw new OratrInvalidCodeException();
+						}
+						parse(code.arr,env);
+					} else if(arglist[4].str == "if" && arglist[4].type == Token.VarType.tVarname) {
+						Token[] newArgs = arglist[4..$];
+						parse(newArgs,env);
+					} else {
+						throw new OratrInvalidCodeException();
+					}
+				} else {
+					throw new OratrArgumentCountException(
+						arglist.length,"\b\b\b\b\b\b\b\b\bcontrol structure if","3+ matching tokens and");
+				}
+			}
+		} else {
+			condenseArguments(arglist,env);
+			Token func = arglist[0];
+			func = env.eval(func);
+			if(func.type == Token.VarType.tBuiltin) {
+				arglist = arglist[1..$];
+				ret = func.func(arglist,env);
+			} else if(func.type == Token.VarType.tFunction) {
+				// Execute the new code
+			} else {
+				// Work out the whole math thing
+				if(arglist.length > 2 && isSettingOpcode(arglist[1].str)) {
+					ret = bi_set(arglist,env);
+				} else {
+					ret = bi_math.bi_math(arglist,env);
+				}
 			}
 		}
 	}
