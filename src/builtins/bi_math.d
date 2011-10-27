@@ -35,12 +35,9 @@ void import_math(ref Environment env) {
 real _bi_numeric_math_solve(real a, string op, real b)
 {
 	switch(op) {
-	case "+":
-		return a+b;
-	case "-":
-		return a-b;
-	case "*":
-		return a*b;
+	case "+":		return a+b;
+	case "-":		return a-b;
+	case "*":		return a*b;
 	case "/":
 		if(b!=0) {
 			return a/b;
@@ -48,45 +45,30 @@ real _bi_numeric_math_solve(real a, string op, real b)
 			return real.nan;
 		}
 	case "**":
-	case "^^":
-		return pow(a, b);
-	case "%":
-		return remainder(a,b);
-	case "<<":
-		return a * pow(2,b);
-	case ">>":
-		return a * pow(2,-b);
-	case ">>>":
-		return a * pow(2,-b);
-	case "|":
-		return cast(int)a | cast(int)b;
-	case "&":
-		return cast(int)a & cast(int)b;
-	case "^":
-		return cast(int)a ^ cast(int)b;
-	case "<?":
-		return fmin(a,b);
-	case ">?":
-		return fmax(a,b);
-	default:
-		return real.nan;
+	case "^^":		return pow(a, b);
+	case "%":		return remainder(a,b);
+	case "<<":		return a * pow(2,b);
+	case ">>":		return a * pow(2,-b);
+	case ">>>":		return a * pow(2,-b);
+	case "|":		return cast(int)a | cast(int)b;
+	case "&":		return cast(int)a & cast(int)b;
+	case "^":		return cast(int)a ^ cast(int)b;
+	case "<?":		return fmin(a,b);
+	case ">?":		return fmax(a,b);
+	case ">":		return a>b;
+	case "<":		return a<b;
+	case "<=":		return a<=b;
+	case ">=":		return a>=b;
+	case "!=":		return a!=b;
+	case "==":		return a==b;
+	default:		return real.nan;
 	}
 }
 
 Token _bi_math_solve(Token a, Token op, Token b)
 {
 	Token ret = 0;
-	if(a.type != b.type) {
-		throw new OratrMathOperatorException(vartypeToStr(a.type),vartypeToStr(b.type));
-	}
-	if(a.type == Token.VarType.tNumeric) {
-		ret.type = Token.VarType.tNumeric;
-		if(Operator_Priority(op.str)) {
-			ret.d = _bi_numeric_math_solve(a.d,op.str,b.d);
-		} else {
-			// It's possibly a user defined overload?
-		}
-	} else if(op.str == "~") {
+	if(op.str == "~") {
 		if(a.type == Token.VarType.tString && b.type == Token.VarType.tString) {
 			ret.type = Token.VarType.tString;
 			ret.str = a.str ~ b.str;
@@ -98,6 +80,35 @@ Token _bi_math_solve(Token a, Token op, Token b)
 				ret = a;
 				ret.arr ~= b;
 			}
+		} else if(b.type == Token.VarType.tArray) {
+			ret.type = Token.VarType.tArray;
+			ret.arr = a ~ b.arr;
+		} else if((a.type == Token.VarType.tString && b.type == Token.VarType.tNumeric) ||
+				  (a.type == Token.VarType.tNumeric && b.type == Token.VarType.tString)) {
+			ret = Token(a.str~b.str);
+		} else if(a.type == Token.VarType.tNumeric && b.type == Token.VarType.tNumeric) {
+			ret.type = Token.VarType.tArray;
+			ret.arr = [a,b];
+		} else if(a.type == Token.VarType.tCode && b.type == Token.VarType.tCode) {
+			ret.type = Token.VarType.tCode;
+			ret.arr = a.arr~b.arr;
+		} else if(a.type == Token.VarType.tFunction && b.type == Token.VarType.tFunction) {
+			// Check to see if the arguments are equal
+			if(a.arr == b.arr) {
+				ret = a;
+				ret.arr ~= Token(";").withType(Token.VarType.tCommandSeperator)~b.arr;
+			} else {
+				throw new OratrMathOperatorException(vartypeToStr(a.type),vartypeToStr(b.type));
+			}
+		} else {
+			throw new OratrMathOperatorException(vartypeToStr(a.type),vartypeToStr(b.type));
+		}
+	} else if(a.type == Token.VarType.tNumeric && b.type == Token.VarType.tNumeric) {
+		ret.type = Token.VarType.tNumeric;
+		if(Operator_Priority(op.str)) {
+			ret.d = _bi_numeric_math_solve(a.d,op.str,b.d);
+		} else {
+			throw new OratrInvalidMathOperatorException(vartypeToStr(a.type),vartypeToStr(b.type));
 		}
 	} else {
 		
@@ -148,18 +159,16 @@ Token bi_math(ref Token[] argv, ref Environment env)
 {
 	Token tmp;
 	// Preprocessing to make sure the {2 -3} bug isn't in here
-	static if(0) {
-		for(uint i=1;i<argv.length;i++) {
-			tmp = argv[i];
+	for(uint i=0;i<argv.length;i++) {
+		tmp = argv[i];
+		env.eval(tmp);
+		if(tmp.type == Token.VarType.tNumeric && i<(argv.length-1)) {
+			tmp = argv[++i];
 			env.eval(tmp);
-			if(tmp.type == Token.VarType.tNumeric && i<(argv.length-1)) {
-				tmp = argv[++i];
-				env.eval(tmp);
-				if(tmp.type == Token.VarType.tNumeric) {
-					Token op = "+";
-					op.type = Token.VarType.tOpcode;
-					argv = argv[0..i]~op~argv[i+1..$];
-				}
+			if(tmp.type == Token.VarType.tNumeric) {
+				Token op = "+";
+				op.type = Token.VarType.tOpcode;
+				argv = argv[0..i]~op~argv[i..$];
 			}
 		}
 	}
@@ -187,6 +196,7 @@ Token bi_math(ref Token[] argv, ref Environment env)
 			s ~= argv[i];
 			break;
 		}
+		case Token.VarType.tCode:
 		case Token.VarType.tNumeric:
 		case Token.VarType.tString: {
 			postfix ~= argv[i];
@@ -222,18 +232,17 @@ Token bi_math(ref Token[] argv, ref Environment env)
 			s ~= _bi_math_solve(a,postfix[i],b);
 			break;
 		}
+		case Token.VarType.tCode:
 		case Token.VarType.tNumeric:
 		case Token.VarType.tString: {
 			s ~= postfix[i];
 			break;
 		}
-		default: {
+		default:
 			// It should never reach this, but just in case...
 			throw new OratrInvalidArgumentException(token.vartypeToStr(argv[i].type), i);
-		}
 		};
 	}
-	
 	return s[$-1];
 }
 
@@ -346,7 +355,7 @@ Token bi_cos(ref Token[] argv, ref Environment env)
 Token bi_tan(ref Token[] argv, ref Environment env)
 {
 	if(argv.length != 1) {
-		throw new OratrArgumentCountException(argv.length,"sin","1");
+		throw new OratrArgumentCountException(argv.length,"tan","1");
 	}
 	Token ret = argv[0];
 	ret = env.eval(ret);
@@ -360,7 +369,7 @@ Token bi_tan(ref Token[] argv, ref Environment env)
 Token bi_asin(ref Token[] argv, ref Environment env)
 {
 	if(argv.length != 1) {
-		throw new OratrArgumentCountException(argv.length,"sin","1");
+		throw new OratrArgumentCountException(argv.length,"asin","1");
 	}
 	Token ret = argv[0];
 	ret = env.eval(ret);
@@ -374,7 +383,7 @@ Token bi_asin(ref Token[] argv, ref Environment env)
 Token bi_acos(ref Token[] argv, ref Environment env)
 {
 	if(argv.length != 1) {
-		throw new OratrArgumentCountException(argv.length,"sin","1");
+		throw new OratrArgumentCountException(argv.length,"acos","1");
 	}
 	Token ret = argv[0];
 	ret = env.eval(ret);
@@ -388,7 +397,7 @@ Token bi_acos(ref Token[] argv, ref Environment env)
 Token bi_atan(ref Token[] argv, ref Environment env)
 {
 	if(argv.length != 1) {
-		throw new OratrArgumentCountException(argv.length,"sin","1");
+		throw new OratrArgumentCountException(argv.length,"atan","1");
 	}
 	Token ret = argv[0];
 	ret = env.eval(ret);
@@ -402,7 +411,7 @@ Token bi_atan(ref Token[] argv, ref Environment env)
 Token bi_sinh(ref Token[] argv, ref Environment env)
 {
 	if(argv.length != 1) {
-		throw new OratrArgumentCountException(argv.length,"sin","1");
+		throw new OratrArgumentCountException(argv.length,"sinh","1");
 	}
 	Token ret = argv[0];
 	ret = env.eval(ret);
@@ -416,7 +425,7 @@ Token bi_sinh(ref Token[] argv, ref Environment env)
 Token bi_cosh(ref Token[] argv, ref Environment env)
 {
 	if(argv.length != 1) {
-		throw new OratrArgumentCountException(argv.length,"cos","1");
+		throw new OratrArgumentCountException(argv.length,"cosh","1");
 	}
 	Token ret = argv[0];
 	ret = env.eval(ret);
@@ -430,7 +439,7 @@ Token bi_cosh(ref Token[] argv, ref Environment env)
 Token bi_tanh(ref Token[] argv, ref Environment env)
 {
 	if(argv.length != 1) {
-		throw new OratrArgumentCountException(argv.length,"sin","1");
+		throw new OratrArgumentCountException(argv.length,"tanh","1");
 	}
 	Token ret = argv[0];
 	ret = env.eval(ret);
@@ -444,7 +453,7 @@ Token bi_tanh(ref Token[] argv, ref Environment env)
 Token bi_asinh(ref Token[] argv, ref Environment env)
 {
 	if(argv.length != 1) {
-		throw new OratrArgumentCountException(argv.length,"sin","1");
+		throw new OratrArgumentCountException(argv.length,"asinh","1");
 	}
 	Token ret = argv[0];
 	ret = env.eval(ret);
@@ -458,7 +467,7 @@ Token bi_asinh(ref Token[] argv, ref Environment env)
 Token bi_acosh(ref Token[] argv, ref Environment env)
 {
 	if(argv.length != 1) {
-		throw new OratrArgumentCountException(argv.length,"sin","1");
+		throw new OratrArgumentCountException(argv.length,"acosh","1");
 	}
 	Token ret = argv[0];
 	ret = env.eval(ret);
@@ -472,7 +481,7 @@ Token bi_acosh(ref Token[] argv, ref Environment env)
 Token bi_atanh(ref Token[] argv, ref Environment env)
 {
 	if(argv.length != 1) {
-		throw new OratrArgumentCountException(argv.length,"sin","1");
+		throw new OratrArgumentCountException(argv.length,"atanh","1");
 	}
 	Token ret = argv[0];
 	ret = env.eval(ret);
@@ -503,7 +512,7 @@ Token bi_log(ref Token[] argv, ref Environment env)
 			ret.d = 0;
 		}
 	} else {
-		throw new OratrArgumentCountException(argv.length,"sin","1");
+		throw new OratrArgumentCountException(argv.length,"log","1");
 	}
 	return ret;
 }
@@ -511,7 +520,7 @@ Token bi_log(ref Token[] argv, ref Environment env)
 Token bi_abs(ref Token[] argv, ref Environment env)
 {
 	if(argv.length != 1) {
-		throw new OratrArgumentCountException(argv.length,"sin","1");
+		throw new OratrArgumentCountException(argv.length,"abs","1");
 	}
 	Token ret = argv[0];
 	ret = env.eval(ret);

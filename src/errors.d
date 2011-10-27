@@ -79,9 +79,23 @@ class OratrMathOperatorException : OratrBaseException {
     }
 }
 
+class OratrInvalidMathOperatorException : OratrBaseException {
+	this( string op, string file = __FILE__, size_t line = __LINE__ )
+    {
+        super( "Illegal operation \""~op~"\"", file, line );
+    }
+}
+
 class OratrMissingOperandException : OratrBaseException {
 	this( string file = __FILE__, size_t line = __LINE__ )
     {
         super( "Missing operand in math expression", file, line );
+    }
+}
+
+class OratrMissingFileException : OratrBaseException {
+	this( string filename, string file = __FILE__, size_t line = __LINE__ )
+    {
+        super( "File not found: "~filename, file, line );
     }
 }

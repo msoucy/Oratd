@@ -15,6 +15,10 @@ struct Environment {
 private:
 	typedef Token[string] Scope;
 public:
+	enum Flags {
+		Break=0x01
+	}
+	uint flags = 0;
 	Token* evalVarname(string src) {
 		Token* ret;
 		int recastLoc = std.string.indexOf(src,'$');
@@ -44,7 +48,7 @@ public:
 			offsets ~= src;
 		}
 		
-		foreach_reverse(Scope s ; scopes) {
+		foreach_reverse(ref s ; scopes) {
 			if(key in s) {
 				ret = &s[key];
 			}

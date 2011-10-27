@@ -14,6 +14,7 @@ void import_varops(ref Environment env) {
 	mixin(AddFunc!("trim"));
 	mixin(AddFunc!("slice"));
 	mixin(AddFunc!("len"));
+	mixin(AddFunc!("store"));
 }
 
 Token bi_set(ref Token[] argv, ref Environment env)
@@ -157,6 +158,7 @@ Token bi_trim(ref Token[] argv, ref  Environment env)
 Token bi_len(ref Token[] argv, ref Environment env) {
 	Token ret;
 	if(argv.length != 1) {
+		throw new OratrArgumentCountException(argv.length,"len","1");
 	}
 	ret = argv[0];
 	ret = env.eval(ret);
@@ -167,5 +169,29 @@ Token bi_len(ref Token[] argv, ref Environment env) {
 	} else {
 		throw new OratrInvalidArgumentException(vartypeToStr(ret.type),0);
 	}
+	return ret;
+}
+
+Token bi_store(ref Token[] argv, ref Environment env) {
+	Token ret = argv[0];
+	ret = env.eval(ret);
+	if(ret.type != Token.VarType.tArray) {
+		throw new OratrInvalidArgumentException(vartypeToStr(ret.type),0);
+	}
+	foreach(i,e;argv[1..$]) {
+		if(e.type != Token.VarType.tVarname) {
+			throw new OratrInvalidArgumentException(vartypeToStr(e.type),i+1);
+		}
+	}
+	if(ret.arr.length < (argv.length-1)) {
+		throw new OratrArgumentCountException(argv.length-1,"store",format("0-%s",ret.arr.length));
+	}
+	uint i;
+	for(i=1;i<argv.length;i++) {
+		Token val = ret.arr[i-1];
+		val = env.eval(val);
+		*env.evalVarname(argv[i].str) = val;
+	}
+	ret.arr = ret.arr[(i-1)..$];
 	return ret;
 }

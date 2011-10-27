@@ -5,6 +5,7 @@
 -I"src"
 
 "src/builtins/bi_basics.d"
+"src/builtins/bi_files.d"
 "src/builtins/bi_init.d"
 "src/builtins/bi_math.d"
 "src/builtins/bi_stdio.d"

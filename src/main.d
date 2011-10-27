@@ -7,9 +7,12 @@ import parse;
 import bi_init;
 
 import std.stdio;
+import std.string;
 import std.algorithm;
 import std.cstream;
-import std.conv;
+import std.process;
+import std.file : getcwd;
+version(Posix) import std.path : absolutePath, dirName, buildNormalizedPath;
 
 void printTokens(Token[] t, int s) {
 	foreach(tok;t) {
@@ -24,35 +27,38 @@ void printTokens(Token[] t, int s) {
 	}
 }
 
-void main()
+void main(string[] argv)
 {
-	Environment env;
+	environment.Environment env;
 	env.init();
+	{
+		// Add the important locations to the path
+		env.scopes[0]["__path__"] = Token().withType(Token.VarType.tArray);
+		env.scopes[0]["__path__"].arr ~= Token(getcwd).withType(Token.VarType.tString);
+		version(Posix) {
+			// Get the directory of the program
+			// This will probably fail for symlinks, but std.path.readLink is erroring for me
+			auto execPath = absolutePath(argv[0]);
+			auto pathTok = Token(buildNormalizedPath(dirName(execPath),"include"));
+			env.scopes[0]["__path__"].arr ~= pathTok;
+			env.scopes[0]["__include__"] = pathTok;
+		}
+	}
 	init_builtins(env);
 	{
-		Token tmp = "a";
-		tmp.type = Token.VarType.tVarname;
-		env.eval(tmp).arr.length = 3;
-		env.eval(tmp).type = Token.VarType.tArray;
-		env.eval(tmp).arr[0].d = 9;
-		env.eval(tmp).arr[0].type = Token.VarType.tNumeric;
-		env.eval(tmp).arr[1].d = 3;
-		env.eval(tmp).arr[1].type = Token.VarType.tNumeric;
-		env.eval(tmp).arr[2].d = 2;
-		env.eval(tmp).arr[2].type = Token.VarType.tNumeric;
+		Token[] tempargs = [Token("run").withType(Token.VarType.tVarname),
+							Token("~/.oratrc").withType(Token.VarType.tVarname)];
+		parse.parse(tempargs,env);
 	}
 	string buf;
-	while(buf != "exit") {
+	while(1) {
 		dout.writef("==> "c);
-		buf = to!string(din.readLine());
+		buf = cast(string)din.readLine();
 		try {
 			auto toks = tokenize.tokenize(buf,din);
 			parse.parse(toks,env);
 		} catch(OratrBaseException e) {
 			dout.writef("%s\n", e.msg);
-		}/* catch(Throwable e) {
-			dout.writef("%s\n", e.msg);
-		}/**/
+		}
 	}
-	return;
 }

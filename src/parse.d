@@ -56,12 +56,16 @@ Token[] condenseArguments(ref Token[] argv, ref Environment env, uint params=0) 
 			foreach(toks;temps) {
 				toks = condenseArguments(toks,env);
 				if(!toks.length) toks ~= Token(0);
-				parse(toks,env);
-				argv[i].arr ~= *env.evalVarname("__return__");
+				if(toks.length == 1 && toks[0].type == Token.VarType.tVarname) {
+					argv[i].arr ~= env.eval(toks[0]);
+				} else {
+					parse(toks,env);
+					argv[i].arr ~= *env.evalVarname("__return__");
+				}
 			}
 			argv[i].type = Token.VarType.tArray;
 		} else if(argv[i].type == Token.VarType.tArrayElementSeperator) {
-			argv[] = argv[0..i]~argv[i+1..$];
+			argv = argv[0..i]~argv[i+1..$];
 			i -= 1;
 		}
 	}

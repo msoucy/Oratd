@@ -154,10 +154,10 @@ real getNumeric(ref string src) {
 
 string getNextLine(InputStream source) {
 	string str = "";
-	str = cast(string)(source.readLine());
 	if(source.eof()) {
 		throw new OratrParseException("End of Input Stream");
 	}
+	str = cast(string)(source.readLine());
 	return str;
 }
 
@@ -310,7 +310,7 @@ Token[] tokenize(ref string src, InputStream source, BraceType escapeFrom=BraceT
 			ret ~= tmp;
 			return ret;
 		} else {
-			dout.writef("> ");
+			if(source is din) dout.writef("> ");
 			src ~= getNextLine(source);
 		}
 	}
@@ -337,7 +337,7 @@ Token[] tokenize(ref string src, InputStream source, BraceType escapeFrom=BraceT
 			}
 		}
 		if(!src.length && escapeFrom != BraceType.bNone) {
-			dout.writef("> ");
+			if(source is din) dout.writef("> ");
 			src ~= getNextLine(source);
 		}
 	} while(src.length);
