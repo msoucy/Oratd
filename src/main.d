@@ -46,7 +46,7 @@ void main(string[] argv)
 	}
 	init_builtins(env);
 	{
-		Token[] tempargs = [Token("run").withType(Token.VarType.tVarname),
+		Token[] tempargs = [Token("source").withType(Token.VarType.tVarname),
 							Token("~/.oratrc").withType(Token.VarType.tVarname)];
 		parse.parse(tempargs,env);
 	}

@@ -17,8 +17,8 @@ string hexRegex = "((\\+|-)?0[xX][0-9A-Fa-f]*(\\.[0-9A-Fa-f]*)?)";
 string binaryRegex = "([\\+\\-]?0[bB][01]*(\\.[01]*)?)";
 string octalRegex = "([\\+\\-]?0[oO][0-7]*(\\.[0-7]*)?)";
 string decimalRegex = "([\\+\\-]?[0-9]*(\\.[0-9]*)?)";
-string opcodeRegex = "([\\+\\-\\*/\\\\=\\^&!%~\\|<>\\?]+)";
-string opcodeList = "+\\*/\\=^&!%~|<>?";
+string opcodeRegex = "([\\+\\-\\*/\\\\=\\^&!%~\\|<>\\?@]+)";
+string opcodeList = "+\\*/\\=^&!%~|<>?@";
 string varNameRegex = "((?:[a-zA-Z_][a-zA-Z0-9_]*))";
 //string simpleVarNameRegex = "((?:[a-zA-Z_][a-zA-Z0-9_]*))";
 //string varNameRegex = "((?:[a-zA-Z_][a-zA-Z0-9_]*(:[a-zA-Z_][a-zA-Z0-9_]*)*(\\$[a-zA-Z_][a-zA-Z0-9_]*)?))";
@@ -309,6 +309,8 @@ Token[] tokenize(ref string src, InputStream source, BraceType escapeFrom=BraceT
 			tmp.func = &bi_null;
 			ret ~= tmp;
 			return ret;
+		} else if(escapeFrom == BraceType.bBrace) {
+			return ret;
 		} else {
 			if(source is din) dout.writef("> ");
 			src ~= getNextLine(source);
@@ -318,8 +320,9 @@ Token[] tokenize(ref string src, InputStream source, BraceType escapeFrom=BraceT
 	do {
 		tmp = makeToken(src,source,escapeFrom);
 		switch(tmp.type){
-			case Token.VarType.tClosingParen:
 			case Token.VarType.tClosingBrace:
+				return ret;
+			case Token.VarType.tClosingParen:
 			case Token.VarType.tClosingBracket: {
 				// Just return the expression
 				if(!ret.length) {

@@ -6,10 +6,14 @@ import bi_math;
 import std.cstream;
 import std.string;
 
-void import_varops(ref Environment env) {
+void import_varops(ref Environment env)
+{
 	// Variables
 	mixin(AddFunc!("set"));
 	mixin(AddFunc!("typeid"));
+	mixin(AddFunc!("function"));
+	mixin(AddFunc!("tell"));
+	mixin(AddFunc!("call"));
 	// Operations
 	mixin(AddFunc!("trim"));
 	mixin(AddFunc!("slice"));
@@ -37,13 +41,12 @@ Token bi_set(ref Token[] argv, ref Environment env)
 		parse.parse(argv[2..$], env);
 		ret = *env.evalVarname("__return__");
 	}
-	if(argv[1].str[0..$-1] == "") {
+	if(argv[1].str == "=") {
 		*orig = ret;
 	} else {
 		Token[] args;
 		args ~= *orig;
-		args ~= Token(argv[1].str[0..$-1]);
-		args[$-1].type = Token.VarType.tOpcode;
+		args ~= Token(argv[1].str[0..$-1]).withType(Token.VarType.tOpcode);
 		args ~= ret;
 		parse.parse(args, env);
 		*orig = *env.evalVarname("__return__");
@@ -51,7 +54,8 @@ Token bi_set(ref Token[] argv, ref Environment env)
 	return ret;
 }
 
-Token bi_typeid(ref Token[] argv, ref Environment env) {
+Token bi_typeid(ref Token[] argv, ref Environment env)
+{
 	if(argv.length != 1) {
 		throw new OratrArgumentCountException(argv.length,"typeid","1");
 	}
@@ -61,8 +65,14 @@ Token bi_typeid(ref Token[] argv, ref Environment env) {
 	return ret;
 }
 
-Token bi_tell(ref Token[] argv, ref Environment env) {
-	assert(0);
+Token bi_tell(ref Token[] argv, ref Environment env)
+{
+	if(argv.length != 1) throw new OratrArgumentCountException(argv.length,"tell","1");
+	Token ret = argv[0];
+	ret = env.eval(ret);
+	ret.str = format("`%s`:%s",ret.str,vartypeToStr(ret.type));
+	ret.type = Token.VarType.tString;
+	return ret;
 }
 
 Token bi_slice(ref Token[] argv, ref  Environment env)
@@ -155,7 +165,8 @@ Token bi_trim(ref Token[] argv, ref  Environment env)
 	return ret;
 }
 
-Token bi_len(ref Token[] argv, ref Environment env) {
+Token bi_len(ref Token[] argv, ref Environment env)
+{
 	Token ret;
 	if(argv.length != 1) {
 		throw new OratrArgumentCountException(argv.length,"len","1");
@@ -172,7 +183,8 @@ Token bi_len(ref Token[] argv, ref Environment env) {
 	return ret;
 }
 
-Token bi_store(ref Token[] argv, ref Environment env) {
+Token bi_store(ref Token[] argv, ref Environment env)
+{
 	Token ret = argv[0];
 	ret = env.eval(ret);
 	if(ret.type != Token.VarType.tArray) {
@@ -193,5 +205,71 @@ Token bi_store(ref Token[] argv, ref Environment env) {
 		*env.evalVarname(argv[i].str) = val;
 	}
 	ret.arr = ret.arr[(i-1)..$];
+	return ret;
+}
+
+Token bi_function(ref Token[] argv, ref Environment env)
+{
+	Token ret;
+	if(!argv.length) throw new OratrArgumentCountException(argv.length,"function","1+");
+	Token code = argv[$-1];
+	code = env.eval(code);
+	if(code.type != Token.VarType.tCode) {
+		throw new OratrInvalidArgumentException(vartypeToStr(code.type),argv.length-1);
+	}
+	ret.arr.length = 2;
+	ret.arr[0].type = Token.VarType.tArray;
+	ret.arr[1] = code;
+	bool nextIsReference = false;
+	for(uint i=0;i<argv.length-1;i++) {
+		if(argv[i].type == Token.VarType.tVarname) {
+			ret.arr[0].arr ~= argv[i];
+			// We use recast to mean reference...
+			if(nextIsReference) ret.arr[0].arr[$-1].type = Token.VarType.tRecast;
+			nextIsReference = false;
+		} else if(argv[i].type == Token.VarType.tOpcode && argv[i].str == "@") {
+			nextIsReference = true;
+		} else {
+			throw new OratrInvalidArgumentException(vartypeToStr(argv[i].type),i);
+		}
+	}
+	ret.type = Token.VarType.tFunction;
+	return ret;
+}
+
+Token bi_call(ref Token[] argv, ref Environment env)
+{
+	Token ret;
+	if(!argv.length) throw new OratrArgumentCountException(argv.length,"call","1+");
+	Token func = argv[0];
+	func = env.eval(func);
+	if(func.type != Token.VarType.tFunction) {
+		throw new OratrInvalidArgumentException(vartypeToStr(func.type),0);
+	}
+	if(argv.length-1 != func.arr[0].arr.length) {
+		throw new OratrArgumentCountException(argv.length,"call",format("%d",func.arr[0].arr.length));
+	}
+	env.inscope();
+	for(uint i=0;i<func.arr[0].arr.length;i++) {
+		if(func.arr[0].arr[i].type == Token.VarType.tRecast) {
+			if(argv[i+1].type != Token.VarType.tVarname) {
+				throw new OratrInvalidArgumentException(vartypeToStr(argv[i+1].type),i+1);
+			}
+		}
+		Token tmp = argv[i+1];
+		tmp = env.eval(tmp);
+		env.scopes[$-1][func.arr[0].arr[i].str] = tmp;
+	}
+	env.inscope();
+	parse.parse(func.arr[1].arr,env);
+	ret = *env.evalVarname("__return__");
+	env.outscope();
+	auto results = env.scopes[$-1];
+	env.outscope();
+	for(uint i=0;i<func.arr[0].arr.length;i++) {
+		if(func.arr[0].arr[i].type == Token.VarType.tRecast) {
+			*env.evalVarname(argv[i+1].str) = results[func.arr[0].arr[i].str];
+		}
+	}
 	return ret;
 }

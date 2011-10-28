@@ -51,6 +51,7 @@ public:
 		foreach_reverse(ref s ; scopes) {
 			if(key in s) {
 				ret = &s[key];
+				break;
 			}
 		}
 		if(ret == null) {
@@ -96,11 +97,13 @@ public:
 	}
 	void inscope() {
 		scopes.length += 1;
+		scopes[0]["__scope__"].d = scopes[0]["__scope__"].d+1;
 		
 	}
 	void outscope() {
 		if(scopes.length>1) {
 			scopes.length -= 1;
+			scopes[0]["__scope__"].d = scopes[0]["__scope__"].d-1;
 		}
 	}
 	size_t getscope() {

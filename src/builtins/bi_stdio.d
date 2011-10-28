@@ -11,6 +11,9 @@ void import_stdio(ref Environment env) {
 	mixin(AddFunc!("print"));
 	mixin(AddFunc!("echo"));
 	mixin(AddFunc!("get"));
+	
+	env.scopes[0]["__endl__"] = Token("\n");
+	env.scopes[0]["__tab__"] = Token("\t");
 }
 
 string makeString(ref Token tok, ref Environment env)

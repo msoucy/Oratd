@@ -30,6 +30,8 @@ void import_math(ref Environment env) {
 	env.scopes[0]["PI"] = Token().withType(Token.VarType.tNumeric).withPreciseNumeric(PI);
 	env.scopes[0]["E"] = Token().withType(Token.VarType.tNumeric).withPreciseNumeric(E);
 	env.scopes[0]["SQRT2"] = Token().withType(Token.VarType.tNumeric).withPreciseNumeric(SQRT2);
+	env.scopes[0]["true"] = Token().withType(Token.VarType.tNumeric).withPreciseNumeric(1);
+	env.scopes[0]["false"] = Token().withType(Token.VarType.tNumeric).withPreciseNumeric(0);
 }
 
 real _bi_numeric_math_solve(real a, string op, real b)
@@ -94,12 +96,18 @@ Token _bi_math_solve(Token a, Token op, Token b)
 			ret.arr = a.arr~b.arr;
 		} else if(a.type == Token.VarType.tFunction && b.type == Token.VarType.tFunction) {
 			// Check to see if the arguments are equal
-			if(a.arr == b.arr) {
+			if(a.arr[0] == b.arr[0]) {
 				ret = a;
-				ret.arr ~= Token(";").withType(Token.VarType.tCommandSeperator)~b.arr;
+				// Concatenate commands, not tokens
+				ret.arr ~= Token(";").withType(Token.VarType.tCommandSeperator)~b.arr[1..$];
 			} else {
 				throw new OratrMathOperatorException(vartypeToStr(a.type),vartypeToStr(b.type));
 			}
+		} else if(a.type == Token.VarType.tFunction && b.type == Token.VarType.tCode) {
+			// Code can be appended to a function, but not vice versa
+			ret = a;
+			// Concatenate commands, not tokens
+			ret.arr ~= Token(";").withType(Token.VarType.tCommandSeperator)~b.arr;
 		} else {
 			throw new OratrMathOperatorException(vartypeToStr(a.type),vartypeToStr(b.type));
 		}
@@ -196,7 +204,9 @@ Token bi_math(ref Token[] argv, ref Environment env)
 			s ~= argv[i];
 			break;
 		}
+		case Token.VarType.tArray:
 		case Token.VarType.tCode:
+		case Token.VarType.tFunction:
 		case Token.VarType.tNumeric:
 		case Token.VarType.tString: {
 			postfix ~= argv[i];
@@ -232,7 +242,9 @@ Token bi_math(ref Token[] argv, ref Environment env)
 			s ~= _bi_math_solve(a,postfix[i],b);
 			break;
 		}
+		case Token.VarType.tArray:
 		case Token.VarType.tCode:
+		case Token.VarType.tFunction:
 		case Token.VarType.tNumeric:
 		case Token.VarType.tString: {
 			s ~= postfix[i];

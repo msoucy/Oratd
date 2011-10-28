@@ -45,6 +45,11 @@ Token[] condenseArguments(ref Token[] argv, ref Environment env, uint params=0) 
 		} else if(argv[i].type == Token.VarType.tRawArray) {
 			Token[][] temps;
 			temps.length = 1;
+			if(argv[i].arr.length == 0) {
+				// It's just [], an empty array
+				argv[i].type = Token.VarType.tArray;
+				continue;
+			}
 			foreach(ref tok;argv[i].arr) {
 				if(tok.type == Token.VarType.tArrayElementSeperator) {
 					temps.length += 1;
@@ -56,7 +61,7 @@ Token[] condenseArguments(ref Token[] argv, ref Environment env, uint params=0) 
 			foreach(toks;temps) {
 				toks = condenseArguments(toks,env);
 				if(!toks.length) toks ~= Token(0);
-				if(toks.length == 1 && toks[0].type == Token.VarType.tVarname) {
+				if(toks.length == 1/+ && toks[0].type == Token.VarType.tVarname+/) {
 					argv[i].arr ~= env.eval(toks[0]);
 				} else {
 					parse(toks,env);
@@ -94,6 +99,11 @@ ref Environment parse(ref Token[] argv, ref Environment env)
 			ret = func.func(arglist,env);
 		} else if(func.type == Token.VarType.tFunction) {
 			// Execute the new code
+			if(arglist.length > 2 && isSettingOpcode(arglist[1].str)) {
+				ret = bi_set(arglist,env);
+			} else {
+				ret = bi_call(arglist,env);
+			}
 		} else {
 			// Work out the whole math thing
 			if(arglist.length > 2 && isSettingOpcode(arglist[1].str)) {
