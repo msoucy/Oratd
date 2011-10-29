@@ -59,9 +59,10 @@ Token bi_typeid(ref Token[] argv, ref Environment env)
 	if(argv.length != 1) {
 		throw new OratrArgumentCountException(argv.length,"typeid","1");
 	}
-	Token ret;
+	Token ret=argv[0];
+	ret = env.eval(ret);
+	ret.str = vartypeToStr(ret.type);
 	ret.type = Token.VarType.tTypeID;
-	ret.str = vartypeToStr(argv[0].type);
 	return ret;
 }
 
@@ -104,7 +105,7 @@ Token bi_slice(ref Token[] argv, ref  Environment env)
 			if(stop.d >= start.d) {
 				ret.str = ret.str[cast(uint)start.d .. cast(uint)stop.d];
 			} else {
-				ret.str = ret.str[cast(uint)stop.d .. cast(uint)start.d].reverse;
+				ret.str = cast(string)(ret.str[cast(uint)stop.d .. cast(uint)start.d].dup.reverse);
 			}
 		} else if(ret.type == Token.VarType.tArray) {
 			if(stop.d >= ret.arr.length) {
@@ -153,9 +154,9 @@ Token bi_trim(ref Token[] argv, ref  Environment env)
 				throw new OratrInvalidArgumentException(vartypeToStr(delims.type),1);
 			}
 			munch(ret.str,delims.str);
-			ret.str = ret.str.reverse;
+			ret.str = cast(string)ret.str.dup.reverse;
 			munch(ret.str,delims.str);
-			ret.str = ret.str.reverse;
+			ret.str = cast(string)ret.str.dup.reverse;
 		} else {
 			throw new OratrInvalidArgumentException(vartypeToStr(ret.type),0);
 		}

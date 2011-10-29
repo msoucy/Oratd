@@ -175,10 +175,10 @@ Token makeToken(ref string src, InputStream source, BraceType escapeFrom=BraceTy
 			}
 			src = src[pos+2..$];
 		}  else {
-			ret.str = "";
-			ret.type = Token.VarType.tNone;
 			src = "";
 		}
+		ret.str = "";
+		ret.type = Token.VarType.tComment;
 	} else if(src[0] == ';') {
 		// ; seperates sequences of commands
 		ret.str = "";
@@ -320,6 +320,8 @@ Token[] tokenize(ref string src, InputStream source, BraceType escapeFrom=BraceT
 	do {
 		tmp = makeToken(src,source,escapeFrom);
 		switch(tmp.type){
+			case Token.VarType.tComment:
+				break;
 			case Token.VarType.tClosingBrace:
 				return ret;
 			case Token.VarType.tClosingParen:

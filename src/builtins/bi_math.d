@@ -67,6 +67,19 @@ real _bi_numeric_math_solve(real a, string op, real b)
 	}
 }
 
+real _bi_string_math_solve(string a, string op, string b)
+{
+	switch(op) {
+	case ">":		return a>b;
+	case "<":		return a<b;
+	case "<=":		return a<=b;
+	case ">=":		return a>=b;
+	case "!=":		return a!=b;
+	case "==":		return a==b;
+	default:		return real.nan;
+	}
+}
+
 Token _bi_math_solve(Token a, Token op, Token b)
 {
 	Token ret = 0;
@@ -118,6 +131,9 @@ Token _bi_math_solve(Token a, Token op, Token b)
 		} else {
 			throw new OratrInvalidMathOperatorException(vartypeToStr(a.type),vartypeToStr(b.type));
 		}
+	} else if((a.type == Token.VarType.tString && b.type == Token.VarType.tString) ||
+			  (a.type == Token.VarType.tTypeID && b.type == Token.VarType.tTypeID)) {
+		ret = Token(_bi_string_math_solve(a.str,op.str,b.str)).withType(Token.VarType.tNumeric);
 	} else {
 		
 	}
@@ -169,10 +185,11 @@ Token bi_math(ref Token[] argv, ref Environment env)
 	// Preprocessing to make sure the {2 -3} bug isn't in here
 	for(uint i=0;i<argv.length;i++) {
 		tmp = argv[i];
-		env.eval(tmp);
+		tmp = env.eval(tmp);
+		argv[i] = tmp;
 		if(tmp.type == Token.VarType.tNumeric && i<(argv.length-1)) {
 			tmp = argv[++i];
-			env.eval(tmp);
+			tmp = env.eval(tmp);
 			if(tmp.type == Token.VarType.tNumeric) {
 				Token op = "+";
 				op.type = Token.VarType.tOpcode;

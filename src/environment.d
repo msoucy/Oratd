@@ -72,6 +72,17 @@ public:
 				}
 			} else if(ret.type == Token.VarType.tType) {
 				// Things are offset by data name, use the lookup table in env
+			} else if(ret.type == Token.VarType.tString) {
+				Token off = makeToken(o,din,BraceType.bNone);
+				off = eval(off);
+				if(off.type != Token.VarType.tNumeric) {
+					throw new OratrInvalidOffsetException(o);
+				}
+				if(ret.str.length <= cast(uint)off.d) {
+					throw new OratrOutOfRangeException(src,cast(uint)off.d);
+				} else {
+					ret = new Token(""~ret.str[cast(uint)off.d]);
+				}
 			} else {
 				throw new OratrInvalidOffsetException(vartypeToStr(ret.type));
 			}

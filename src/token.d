@@ -9,7 +9,7 @@ typedef Token function(ref Token[], ref Environment) Function;
 struct Token {
 public:
 	enum VarType {
-		tNone,
+		tNone, tComment,
 		tCode, tCompoundStatement, tString, tNumeric, tRawArray, tArray,
 		tVarname, tTypeID,
 		tType, tFunction, tOpcode, tSpecial, tBuiltin, tRecast,
