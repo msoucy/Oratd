@@ -48,7 +48,7 @@ real _bi_numeric_math_solve(real a, string op, real b)
 		}
 	case "**":
 	case "^^":		return pow(a, b);
-	case "%":		return remainder(a,b);
+	case "%":		return a%b;
 	case "<<":		return a * pow(2,b);
 	case ">>":		return a * pow(2,-b);
 	case ">>>":		return a * pow(2,-b);
@@ -61,7 +61,7 @@ real _bi_numeric_math_solve(real a, string op, real b)
 	case "<":		return a<b;
 	case "<=":		return a<=b;
 	case ">=":		return a>=b;
-	case "!=":		return a!=b;
+	case "!=":		return a<>b;
 	case "==":		return a==b;
 	default:		return real.nan;
 	}

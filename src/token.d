@@ -34,11 +34,12 @@ public:
 			try {
 				return to!real(str);
 			} catch (Exception e) {
-				return 3;
+				return real.nan;
 			}
 		}
 		void d(real _d) {
-			str = to!(string)(_d);
+			static if(1) str = to!(string)(_d);
+			else pd = _d;
 		}
 		void pd(real _d) {
 			str = format("%f",_d);

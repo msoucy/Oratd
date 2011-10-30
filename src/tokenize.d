@@ -227,7 +227,7 @@ Token makeToken(ref string src, InputStream source, BraceType escapeFrom=BraceTy
 		ret.type = Token.VarType.tString;
 		src = src[s.length..$];
 	} else if(src[0] == '-') {
-		if(src.length == 1 || inPattern(src[1],opcodeRegex)) {
+		if(src.length == 1 || inPattern(src[1],opcodeList) || src[1] == ' ') {
 			// It's an operator???
 			string s = cast(string)(match(src,opcodeRegex).captures[0]);
 			ret.str = s;

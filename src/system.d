@@ -1,6 +1,7 @@
 import std.file;
 import std.math;
 import std.stdio;
+import std.string;
 
 const string FILEXT = ".or";
 
@@ -41,4 +42,12 @@ real strToDouble(string str, int base)
 	}
 			
 	return ret;
+}
+
+S1 munchEnd(S1,S2)(ref S1 s, S2 pattern)
+{
+	s = cast(string)s.dup.reverse;
+	S1 ret = munch(s,pattern);
+	s = cast(string)s.dup.reverse;
+	return cast(string)ret.dup.reverse;
 }
