@@ -20,9 +20,14 @@ void import_basics(ref Environment env) {
 }
 
 Token bi_null(ref Token[] argv, ref Environment env) {
-	Token ret = "__return__";
-	ret.type=Token.VarType.tVarname;
-	ret = env.eval(ret);
+	Token ret;
+	if(argv.length) {
+		ret = argv[$-1];
+		ret = env.eval(ret);
+	} else {
+		ret = Token("__return__").withType(Token.VarType.tVarname);
+		ret = env.eval(ret);
+	}
 	return ret;
 }
 
@@ -163,11 +168,12 @@ Token bi_switch(ref Token[] argv, ref Environment env)
 	baseValue = env.eval(baseValue);
 	if(baseValue.type != Token.VarType.tNumeric &&
 		baseValue.type != Token.VarType.tString &&
-		baseValue.type != Token.VarType.tArray) {
+		baseValue.type != Token.VarType.tArray &&
+		baseValue.type != Token.VarType.tTypeID) {
 		throw new OratrInvalidArgumentException(vartypeToStr(baseValue.type),0);
 	}
 	execStatement:
-	for(uint i=2;i<argv.length;i++) {
+	for(uint i=1;i<argv.length;i++) {
 		Token val = argv[i];
 		bool runCode = false;
 		if(val.str == "default" && val.type == Token.VarType.tVarname) {
@@ -184,6 +190,9 @@ Token bi_switch(ref Token[] argv, ref Environment env)
 			case Token.VarType.tArray:
 				runCode = (baseValue.arr == val.arr);
 				break;
+			case Token.VarType.tTypeID:
+				runCode = (baseValue.str == val.str);
+				break;
 			default:
 				break;
 			}
@@ -192,6 +201,7 @@ Token bi_switch(ref Token[] argv, ref Environment env)
 			foreach(tok;argv[i+1..$]) {
 				if(tok.type == Token.VarType.tCode) {
 					parse.parse(tok.arr,env);
+					ret = *env.evalVarname("__return__");
 					// Stop checking the conditions
 					break execStatement;
 				}

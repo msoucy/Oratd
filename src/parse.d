@@ -28,16 +28,15 @@ bool isSettingOpcode(string s)
 	);
 }
 
-enum CondenserParam {
-	ignoreCodeParts=0x1
-};
-
-Token[] condenseArguments(ref Token[] argv, ref Environment env, uint params=0) {
+Token[] condenseArguments(ref Token[] argv, ref Environment env) {
 	// Concatenate VarNames with the extensions they need
 	for(sizediff_t i = 0;i<argv.length;i++) {
 		if(argv[i].type == Token.VarType.tVarname) {
 			if(i+2<argv.length && (argv[i+1].type == Token.VarType.tVarOffsetSeperator ||
 					argv[i+1].type == Token.VarType.tRecast)) {
+				if(argv[i+2].type == Token.VarType.tCompoundStatement) {
+					argv[i+2] = env.eval(argv[i+2]);
+				}
 				argv[i].str ~= argv[i+1].str ~ argv[i+2].str;
 				argv = argv[0..i+1]~argv[i+3..$];
 				i -= 1;
@@ -61,7 +60,7 @@ Token[] condenseArguments(ref Token[] argv, ref Environment env, uint params=0) 
 			foreach(toks;temps) {
 				toks = condenseArguments(toks,env);
 				if(!toks.length) toks ~= Token(0);
-				if(toks.length == 1/+ && toks[0].type == Token.VarType.tVarname+/) {
+				if(toks.length == 1 && toks[0].type == Token.VarType.tVarname) {
 					argv[i].arr ~= env.eval(toks[0]);
 				} else {
 					parse(toks,env);

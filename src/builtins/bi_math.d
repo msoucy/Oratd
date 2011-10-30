@@ -80,6 +80,15 @@ real _bi_string_math_solve(string a, string op, string b)
 	}
 }
 
+real _bi_array_math_solve(Token[] a, string op, Token[] b)
+{
+	switch(op) {
+	case "!=":		return a!=b;
+	case "==":		return a==b;
+	default:		return real.nan;
+	}
+}
+
 Token _bi_math_solve(Token a, Token op, Token b)
 {
 	Token ret = 0;
@@ -134,6 +143,8 @@ Token _bi_math_solve(Token a, Token op, Token b)
 	} else if((a.type == Token.VarType.tString && b.type == Token.VarType.tString) ||
 			  (a.type == Token.VarType.tTypeID && b.type == Token.VarType.tTypeID)) {
 		ret = Token(_bi_string_math_solve(a.str,op.str,b.str)).withType(Token.VarType.tNumeric);
+	} else if(a.type == Token.VarType.tArray && b.type == Token.VarType.tArray) {
+		ret = Token(_bi_array_math_solve(a.arr,op.str,b.arr)).withType(Token.VarType.tNumeric);
 	} else {
 		
 	}
