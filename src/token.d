@@ -1,8 +1,10 @@
 import bi_basics;
 import environment;
+import system;
 import std.conv;
 import std.cstream;
 import std.string;
+import std.math;
 
 typedef Token function(ref Token[], ref Environment) Function;
 
@@ -38,11 +40,31 @@ public:
 			}
 		}
 		void d(real _d) {
-			static if(1) str = to!(string)(_d);
+			static if(0) str = to!(string)(_d);
 			else pd = _d;
 		}
 		void pd(real _d) {
-			str = format("%f",_d);
+			if(approxEqual(_d,cast(long)_d,1e-15)) {
+				str = to!(string)(_d);
+			} else {
+				str = format("%.15f",_d);
+				if(indexOf(str,'.')!=-1) {
+					auto index = indexOf(str,'.');
+					bool detected = false;
+					for(uint i=index+1;i<str.length && i<index+6;i++) {
+						if(str[i]!='0') {
+							detected=true;
+							break;
+						}
+					}
+					if(!detected) {
+						str = str[0..index+6];
+					}
+				}
+				munchEnd(str,"0");
+				if(str.length && str[$-1]=='.') {str = str[0..$-1];}
+			}
+			if(str=="") str = "0";
 		}
 	}
 	// Helper functions that let me do construction-time editing

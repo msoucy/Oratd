@@ -46,8 +46,10 @@ real strToDouble(string str, int base)
 
 S1 munchEnd(S1,S2)(ref S1 s, S2 pattern)
 {
-	s = cast(string)s.dup.reverse;
-	S1 ret = munch(s,pattern);
-	s = cast(string)s.dup.reverse;
-	return cast(string)ret.dup.reverse;
+	S1 ret;
+	while(s.length && inPattern(s[$-1],pattern)) {
+		ret = s[$-1]~ret;
+		s = s[0..$-1];
+	}
+	return ret;
 }
