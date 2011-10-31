@@ -188,7 +188,14 @@ Token bi_switch(ref Token[] argv, ref Environment env)
 				runCode = (baseValue.str == val.str);
 				break;
 			case Token.VarType.tArray:
-				runCode = (baseValue.arr == val.arr);
+				runCode = true;
+				if(baseValue.arr.length != val.arr.length) {
+					runCode = false;
+					break;
+				}
+				for(uint j=0;j<val.arr.length;j++) {
+					runCode &= (baseValue.arr[j] == val.arr[j]);
+				}
 				break;
 			case Token.VarType.tTypeID:
 				runCode = (baseValue.str == val.str);

@@ -87,6 +87,13 @@ public:
 		arr.length = s;
 		return this;
 	}
+	bool opEquals(Token b) {
+		if(arr.length != b.arr.length) return false;
+		for(uint i=0;i<arr.length;i++) {
+			if(arr[i] != b.arr[i]) return false;
+		}
+		return (str == b.str && func == b.func && type == b.type); 
+	}
 }
 
 string vartypeToStr(Token.VarType v)

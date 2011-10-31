@@ -4,10 +4,12 @@ import errors;
 import std.cstream;
 import std.math;
 import std.random;
+import std.range;
 
 void import_math(ref Environment env) {
 	// Math
 	mixin(AddFunc!("math"));
+	mixin(AddFunc!("int"));
 	mixin(AddFunc!("rand"));
 	mixin(AddFunc!("frand"));
 	// Trig - a category of its own <_<
@@ -30,6 +32,7 @@ void import_math(ref Environment env) {
 	env.scopes[0]["PI"] = Token().withType(Token.VarType.tNumeric).withPreciseNumeric(PI);
 	env.scopes[0]["E"] = Token().withType(Token.VarType.tNumeric).withPreciseNumeric(E);
 	env.scopes[0]["SQRT2"] = Token().withType(Token.VarType.tNumeric).withPreciseNumeric(SQRT2);
+	env.scopes[0]["EPSILON"] = Token().withType(Token.VarType.tNumeric).withPreciseNumeric(1e-5);
 	env.scopes[0]["true"] = Token().withType(Token.VarType.tNumeric).withPreciseNumeric(1);
 	env.scopes[0]["false"] = Token().withType(Token.VarType.tNumeric).withPreciseNumeric(0);
 }
@@ -83,8 +86,16 @@ real _bi_string_math_solve(string a, string op, string b)
 real _bi_array_math_solve(Token[] a, string op, Token[] b)
 {
 	switch(op) {
-	case "!=":		return a!=b;
-	case "==":		return a==b;
+	case "!=": {
+		if(a.length != b.length) return true;
+		foreach(x,y;lockstep(a,b)) {if(x != y) return true;}
+		return false;
+	}
+	case "==": {
+		if(a.length != b.length) return false;
+		foreach(x,y;lockstep(a,b)) {if(x != y) return false;}
+		return true;
+	}
 	default:		return real.nan;
 	}
 }
@@ -284,6 +295,16 @@ Token bi_math(ref Token[] argv, ref Environment env)
 		};
 	}
 	return s[$-1];
+}
+
+Token bi_int(ref Token[] argv, ref Environment env)
+{
+	if(argv.length != 1) {
+		throw new OratrArgumentCountException(argv.length,"int","1");
+	}
+	Token ret = argv[0];
+	ret = Token(lrint(env.eval(ret).d));
+	return ret.withType(Token.VarType.tNumeric);
 }
 
 Token bi_rand(ref Token[] argv, ref Environment env)
