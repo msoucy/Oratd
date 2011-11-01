@@ -93,21 +93,17 @@ ref Environment parse(ref Token[] argv, ref Environment env)
 		condenseArguments(arglist,env);
 		Token func = arglist[0];
 		func = env.eval(func);
-		if(func.type == Token.VarType.tBuiltin) {
-			arglist = arglist[1..$];
-			ret = func.func(arglist,env);
-		} else if(func.type == Token.VarType.tFunction) {
-			// Execute the new code
-			if(arglist.length > 2 && isSettingOpcode(arglist[1].str)) {
-				ret = bi_set(arglist,env);
-			} else {
-				ret = bi_call(arglist,env);
-			}
+		if(arglist.length > 2 && isSettingOpcode(arglist[1].str)) {
+			ret = bi_set(arglist,env);
 		} else {
-			// Work out the whole math thing
-			if(arglist.length > 2 && isSettingOpcode(arglist[1].str)) {
-				ret = bi_set(arglist,env);
+			if(func.type == Token.VarType.tBuiltin) {
+				arglist = arglist[1..$];
+				ret = func.func(arglist,env);
+			} else if(func.type == Token.VarType.tFunction) {
+				// Execute the new code
+				ret = bi_call(arglist,env);
 			} else {
+				// Work out the whole math thing
 				ret = bi_math.bi_math(arglist,env);
 			}
 		}
