@@ -73,5 +73,5 @@ Token bi_run(ref Token[] argv, ref Environment env)
 
 Token bi_source(ref Token[] argv, ref Environment env)
 {
-	return _bi_run_code(argv,env,"source",1);
+	return _bi_run_code(argv,env,"source",0);
 }

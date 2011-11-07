@@ -8,17 +8,20 @@ import std.string;
 
 void import_varops(ref Environment env)
 {
-	// Variables
 	mixin(AddFunc!("set"));
 	mixin(AddFunc!("typeid"));
 	mixin(AddFunc!("function"));
 	mixin(AddFunc!("tell"));
 	mixin(AddFunc!("call"));
-	// Operations
-	mixin(AddFunc!("trim"));
-	mixin(AddFunc!("slice"));
-	mixin(AddFunc!("len"));
-	mixin(AddFunc!("store"));
+	
+}
+
+void import_manipulations(ref Environment env)
+{
+	mixin(AddFunc!"trim");
+	mixin(AddFunc!"slice");
+	mixin(AddFunc!"len");
+	mixin(AddFunc!"store");
 }
 
 Token bi_set(ref Token[] argv, ref Environment env)
@@ -186,6 +189,7 @@ Token bi_len(ref Token[] argv, ref Environment env)
 
 Token bi_store(ref Token[] argv, ref Environment env)
 {
+	if(!argv.length) throw new OratrArgumentCountException(0,"store","1+");
 	Token ret = argv[0];
 	ret = env.eval(ret);
 	if(ret.type != Token.VarType.tArray) {
@@ -248,7 +252,7 @@ Token bi_call(ref Token[] argv, ref Environment env)
 		throw new OratrInvalidArgumentException(vartypeToStr(func.type),0);
 	}
 	if(argv.length-1 != func.arr[0].arr.length) {
-		throw new OratrArgumentCountException(argv.length,"call",format("%d",func.arr[0].arr.length));
+		throw new OratrArgumentCountException(argv.length-1,"call",format("%d",func.arr[0].arr.length));
 	}
 	env.inscope();
 	for(uint i=0;i<func.arr[0].arr.length;i++) {
@@ -261,6 +265,7 @@ Token bi_call(ref Token[] argv, ref Environment env)
 		tmp = env.eval(tmp);
 		env.scopes[$-1][func.arr[0].arr[i].str] = tmp;
 	}
+	env.scopes[$-1]["__func__"] = func;
 	env.inscope();
 	parse.parse(func.arr[1].arr,env);
 	ret = *env.evalVarname("__return__");
