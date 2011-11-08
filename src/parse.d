@@ -99,7 +99,8 @@ ref Environment parse(ref Token[] argv, ref Environment env)
 			if(func.type == Token.VarType.tBuiltin) {
 				arglist = arglist[1..$];
 				ret = func.func(arglist,env);
-			} else if(func.type == Token.VarType.tFunction) {
+			} else if(func.type == Token.VarType.tFunction ||
+					func.type == Token.VarType.tVariadicFunction) {
 				// Execute the new code
 				ret = bi_call(arglist,env);
 			} else {

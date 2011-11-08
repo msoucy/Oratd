@@ -22,8 +22,10 @@ void import_basics(ref Environment env) {
 Token bi_null(ref Token[] argv, ref Environment env) {
 	Token ret;
 	if(argv.length) {
-		ret = argv[$-1];
-		ret = env.eval(ret);
+		foreach(arg;argv) {
+			ret = arg;
+			ret = env.eval(ret);
+		}
 	} else {
 		ret = Token("__return__").withType(Token.VarType.tVarname);
 		ret = env.eval(ret);

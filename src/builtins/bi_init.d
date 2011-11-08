@@ -3,6 +3,7 @@ import bi_basics;
 import bi_math;
 import bi_stdio;
 import bi_vars;
+import bi_manipulations;
 import bi_system;
 import bi_files;
 

@@ -75,6 +75,7 @@ string makeString(ref Token tok, ref Environment env)
 			break;
 		case Token.VarType.tCode:
 		case Token.VarType.tFunction:
+		case Token.VarType.tVariadicFunction:
 			ret = format("<code>");
 			break;
 		case Token.VarType.tNone:

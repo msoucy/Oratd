@@ -14,7 +14,7 @@ public:
 		tNone, tComment,
 		tCode, tCompoundStatement, tString, tNumeric, tRawArray, tArray,
 		tVarname, tTypeID,
-		tType, tFunction, tOpcode, tSpecial, tBuiltin, tRecast,
+		tType, tFunction, tOpcode, tSpecial, tBuiltin, tRecast, tVariadicFunction,
 		tCommandSeperator, tArrayElementSeperator,
 		tVarOffsetSeperator, tClosingParen, tClosingBrace, tClosingBracket,
 		tMax
@@ -119,6 +119,8 @@ string vartypeToStr(Token.VarType v)
 			return "";
 		case Token.VarType.tFunction:
 			return "Function";
+		case Token.VarType.tVariadicFunction:
+			return "Variadic Function";
 		case Token.VarType.tOpcode:
 			return "Operation Code";
 		case Token.VarType.tSpecial:
