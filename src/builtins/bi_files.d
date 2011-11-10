@@ -30,11 +30,14 @@ Token _bi_run_code(ref Token[] argv, ref Environment env, string name, bool scop
 		funcs[filename](env);
 		return *env.evalVarname("__return__");
 	} else if(isAbsolute(filename)) {
-		parsetest = new File(filename, FileMode.In);
-		if(!parsetest.isOpen()) {
-			delete parsetest;
+		if(isFile(filename)) {
+			parsetest = new File(filename, FileMode.In);
+		} else {
 			defaultExtension(filename,FILEXT);
 			parsetest = new File(filename, FileMode.In);
+		}
+		if(!parsetest.isOpen()) {
+			delete parsetest;
 		}
 	} else {
 		foreach(ref p;env.evalVarname("__path__").arr) {
@@ -51,6 +54,8 @@ Token _bi_run_code(ref Token[] argv, ref Environment env, string name, bool scop
 		throw new OratrMissingFileException(filename);
 	}
 	if(scopeIn) env.inscope();
+	string oldName = env.evalVarname("__name__").str;
+	if(oldName != "__init__") env.evalVarname("__name__").str = filename;
 	string full="";
 	do {
 		full = cast(string)parsetest.readLine();
@@ -61,6 +66,7 @@ Token _bi_run_code(ref Token[] argv, ref Environment env, string name, bool scop
 			dout.writef("%s\n", e.msg);
 		}
 	} while(!parsetest.eof());
+	env.evalVarname("__name__").str = oldName;
 	if(scopeIn) env.outscope();
 	delete parsetest;
 	return *env.evalVarname("__return__");

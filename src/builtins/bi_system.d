@@ -1,9 +1,12 @@
 import token;
 import environment;
+import errors;
+import std.process : getenv;
 
 void import_system(ref Environment env) {
 	// Janky but accurate way to get the info about the os
 	// I could use std.sys, but this happens at COMPILE time
+	mixin(AddFunc!("getenv"));
 	env.scopes[0]["__system__"] = Token().withArray(3);
 	
 	version(Win32) env.scopes[0]["__system__"].arr[0] = Token("Win32");
@@ -21,4 +24,19 @@ void import_system(ref Environment env) {
 	version(X86) env.scopes[0]["__system__"].arr[2] = Token("x86");
 	else version(X86_64) env.scopes[0]["__system__"].arr[2] = Token("x64");
 	else env.scopes[0]["__system__"].arr[2] = Token("UnknownArchitecture");
+}
+
+Token bi_getenv(ref Token[] argv, ref Environment env)
+{
+	if(argv.length != 1) {
+		throw new OratrArgumentCountException(argv.length,"getenv","1");
+	}
+	Token envstr = argv[0];
+	envstr = env.eval(envstr);
+	if(envstr.type != Token.VarType.tString) {
+		throw new OratrInvalidArgumentException(vartypeToStr(envstr.type),0);
+	}
+	envstr.str = getenv(envstr.str);
+	envstr.type = Token.VarType.tString;
+	return envstr;
 }

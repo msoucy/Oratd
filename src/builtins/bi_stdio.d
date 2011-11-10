@@ -74,9 +74,11 @@ string makeString(ref Token tok, ref Environment env)
 			ret = format("(argument list)");
 			break;
 		case Token.VarType.tCode:
+			ret = format("<code>");
+			break;
 		case Token.VarType.tFunction:
 		case Token.VarType.tVariadicFunction:
-			ret = format("<code>");
+			ret = format("<function>");
 			break;
 		case Token.VarType.tNone:
 			ret = format("<none>");

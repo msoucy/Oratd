@@ -44,15 +44,17 @@ void main(string[] argv)
 			env.scopes[0]["__include__"] = pathTok;
 		}
 	}
+	env.scopes[0]["__name__"] = Token("__init__");
 	init_builtins(env);
 	{
 		Token[] tempargs = [Token("source").withType(Token.VarType.tVarname),
 							Token("~/.oratrc")];
 		parse.parse(tempargs,env);
 	}
+	env.scopes[0]["__name__"] = Token("__main__");
 	string buf;
 	while(1) {
-		dout.writef("==> "c);
+		dout.writef(env.evalVarname("__prompt__").str);
 		buf = cast(string)din.readLine();
 		try {
 			auto toks = tokenize.tokenize(buf,din);

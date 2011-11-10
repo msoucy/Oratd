@@ -105,6 +105,7 @@ public:
 	void init() {
 		scopes.length = 1;
 		scopes[0]["__scope__"] = Token(1);
+		scopes[0]["__prompt__"] = Token("==> ");
 	}
 	void inscope() {
 		scopes.length += 1;

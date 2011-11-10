@@ -4,6 +4,7 @@ import errors;
 import parse;
 import bi_math;
 import std.string;
+import std.cstream;
 
 void import_varops(ref Environment env)
 {
@@ -12,6 +13,8 @@ void import_varops(ref Environment env)
 	mixin(AddFunc!("function"));
 	mixin(AddFunc!("tell"));
 	mixin(AddFunc!("call"));
+	mixin(AddFunc!("local"));
+	mixin(AddFunc!("delete"));
 }
 
 Token bi_set(ref Token[] argv, ref Environment env)
@@ -143,4 +146,41 @@ Token bi_call(ref Token[] argv, ref Environment env)
 		}
 	}
 	return ret;
+}
+
+Token bi_local(ref Token[] argv, ref Environment env)
+{
+	if(!argv.length) throw new OratrArgumentCountException(argv.length,"local","1+");
+	// First loop: make sure the arguments are proper
+	foreach(i, arg;argv) {
+		if(arg.type != Token.VarType.tVarname) {
+			throw new OratrInvalidArgumentException(vartypeToStr(arg.type),i);
+		}
+	}
+	// Second loop: create the new variables in new scope
+	foreach(i, arg;argv) {
+		env.scopes[$-1][arg.str] = Token().withType(Token.VarType.tNone);
+	}
+	return *env.evalVarname("__return__");
+}
+
+Token bi_delete(ref Token[] argv, ref Environment env)
+{
+	if(!argv.length) throw new OratrArgumentCountException(argv.length,"delete","1");
+	// First loop: make sure the arguments are proper
+	foreach(i, arg;argv) {
+		if(arg.type != Token.VarType.tVarname) {
+			throw new OratrInvalidArgumentException(vartypeToStr(arg.type),i);
+		}
+	}
+	// Second loop: delete each scoped value
+	foreach(i, arg;argv) {
+		foreach_reverse(ref s;env.scopes) {
+			if(arg.str in s) {
+				s.remove(arg.str);
+				break;
+			}
+		}
+	}
+	return *env.evalVarname("__return__");
 }

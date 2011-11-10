@@ -36,7 +36,7 @@ Token bi_slice(ref Token[] argv, ref  Environment env)
 		start.d = cast(uint)start.d;
 		stop.d = cast(uint)stop.d;
 		if(ret.type == Token.VarType.tString) {
-			if(stop.d >= ret.str.length) {
+			if(stop.d > ret.str.length) {
 				throw new OratrOutOfRangeException("string", cast(int)stop.d);
 			}
 			if(stop.d >= start.d) {
@@ -45,7 +45,7 @@ Token bi_slice(ref Token[] argv, ref  Environment env)
 				ret.str = cast(string)(ret.str[cast(uint)stop.d .. cast(uint)start.d].dup.reverse);
 			}
 		} else if(ret.type == Token.VarType.tArray) {
-			if(stop.d >= ret.arr.length) {
+			if(stop.d > ret.arr.length) {
 				throw new OratrOutOfRangeException("", cast(int)stop.d);
 			}
 			if(stop.d >= start.d) {
