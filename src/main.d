@@ -46,10 +46,12 @@ void main(string[] argv)
 	}
 	env.scopes[0]["__name__"] = Token("__init__");
 	init_builtins(env);
-	{
+	try {
 		Token[] tempargs = [Token("source").withType(Token.VarType.tVarname),
 							Token("~/.oratrc")];
 		parse.parse(tempargs,env);
+	} catch(OratrMissingFileException e) {
+		// Do nothing, they just don't have an oratrc file
 	}
 	env.scopes[0]["__name__"] = Token("__main__");
 	string buf;

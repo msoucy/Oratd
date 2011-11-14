@@ -53,9 +53,11 @@ Token _bi_run_code(ref Token[] argv, ref Environment env, string name, bool scop
 	if(!parsetest.isOpen()) {
 		throw new OratrMissingFileException(filename);
 	}
-	if(scopeIn) env.inscope();
+	if(scopeIn) {
+		env.inscope();
+	}
 	string oldName = env.evalVarname("__name__").str;
-	if(oldName != "__init__") env.evalVarname("__name__").str = filename;
+	if(oldName != "__init__") env.evalVarname("__name__").str = baseName(filename, FILEXT);
 	string full="";
 	do {
 		full = cast(string)parsetest.readLine();

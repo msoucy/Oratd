@@ -385,173 +385,36 @@ Token bi_frand(ref Token[] argv, ref Environment env)
 	return ret;
 }
 
-Token bi_sin(ref Token[] argv, ref Environment env)
+template MathFunc(string funcname, string actualfunc = funcname) {
+	const char[] MathFunc = `Token bi_`~funcname~`(ref Token[] argv, ref Environment env)
 {
 	if(argv.length != 1) {
-		throw new OratrArgumentCountException(argv.length,"sin","1");
+		throw new OratrArgumentCountException(argv.length,"`~funcname~`","1");
 	}
 	Token ret = argv[0];
 	ret = env.eval(ret);
-	ret.d = sin(ret.d);
+	ret.d = `~actualfunc~`(ret.d);
 	if(approxEqual(ret.d,0)) {
 		ret.d = 0;
 	}
 	return ret;
+}`;
 }
 
-Token bi_cos(ref Token[] argv, ref Environment env)
-{
-	if(argv.length != 1) {
-		throw new OratrArgumentCountException(argv.length,"cos","1");
-	}
-	Token ret = argv[0];
-	ret = env.eval(ret);
-	ret.d = cos(ret.d);
-	if(approxEqual(ret.d,0)) {
-		ret.d = 0;
-	}
-	return ret;
-}
-
-Token bi_tan(ref Token[] argv, ref Environment env)
-{
-	if(argv.length != 1) {
-		throw new OratrArgumentCountException(argv.length,"tan","1");
-	}
-	Token ret = argv[0];
-	ret = env.eval(ret);
-	ret.d = tan(ret.d);
-	if(approxEqual(ret.d,0)) {
-		ret.d = 0;
-	}
-	return ret;
-}
-
-Token bi_asin(ref Token[] argv, ref Environment env)
-{
-	if(argv.length != 1) {
-		throw new OratrArgumentCountException(argv.length,"asin","1");
-	}
-	Token ret = argv[0];
-	ret = env.eval(ret);
-	ret.d = asin(ret.d);
-	if(approxEqual(ret.d,0)) {
-		ret.d = 0;
-	}
-	return ret;
-}
-
-Token bi_acos(ref Token[] argv, ref Environment env)
-{
-	if(argv.length != 1) {
-		throw new OratrArgumentCountException(argv.length,"acos","1");
-	}
-	Token ret = argv[0];
-	ret = env.eval(ret);
-	ret.d = acos(ret.d);
-	if(approxEqual(ret.d,0)) {
-		ret.d = 0;
-	}
-	return ret;
-}
-
-Token bi_atan(ref Token[] argv, ref Environment env)
-{
-	if(argv.length != 1) {
-		throw new OratrArgumentCountException(argv.length,"atan","1");
-	}
-	Token ret = argv[0];
-	ret = env.eval(ret);
-	ret.d = atan(ret.d);
-	if(approxEqual(ret.d,0)) {
-		ret.d = 0;
-	}
-	return ret;
-}
-
-Token bi_sinh(ref Token[] argv, ref Environment env)
-{
-	if(argv.length != 1) {
-		throw new OratrArgumentCountException(argv.length,"sinh","1");
-	}
-	Token ret = argv[0];
-	ret = env.eval(ret);
-	ret.d = sinh(ret.d);
-	if(approxEqual(ret.d,0)) {
-		ret.d = 0;
-	}
-	return ret;
-}
-
-Token bi_cosh(ref Token[] argv, ref Environment env)
-{
-	if(argv.length != 1) {
-		throw new OratrArgumentCountException(argv.length,"cosh","1");
-	}
-	Token ret = argv[0];
-	ret = env.eval(ret);
-	ret.d = cosh(ret.d);
-	if(approxEqual(ret.d,0)) {
-		ret.d = 0;
-	}
-	return ret;
-}
-
-Token bi_tanh(ref Token[] argv, ref Environment env)
-{
-	if(argv.length != 1) {
-		throw new OratrArgumentCountException(argv.length,"tanh","1");
-	}
-	Token ret = argv[0];
-	ret = env.eval(ret);
-	ret.d = tanh(ret.d);
-	if(approxEqual(ret.d,0)) {
-		ret.d = 0;
-	}
-	return ret;
-}
-
-Token bi_asinh(ref Token[] argv, ref Environment env)
-{
-	if(argv.length != 1) {
-		throw new OratrArgumentCountException(argv.length,"asinh","1");
-	}
-	Token ret = argv[0];
-	ret = env.eval(ret);
-	ret.d = asinh(ret.d);
-	if(approxEqual(ret.d,0)) {
-		ret.d = 0;
-	}
-	return ret;
-}
-
-Token bi_acosh(ref Token[] argv, ref Environment env)
-{
-	if(argv.length != 1) {
-		throw new OratrArgumentCountException(argv.length,"acosh","1");
-	}
-	Token ret = argv[0];
-	ret = env.eval(ret);
-	ret.d = acosh(ret.d);
-	if(approxEqual(ret.d,0)) {
-		ret.d = 0;
-	}
-	return ret;
-}
-
-Token bi_atanh(ref Token[] argv, ref Environment env)
-{
-	if(argv.length != 1) {
-		throw new OratrArgumentCountException(argv.length,"atanh","1");
-	}
-	Token ret = argv[0];
-	ret = env.eval(ret);
-	ret.d = atanh(ret.d);
-	if(approxEqual(ret.d,0)) {
-		ret.d = 0;
-	}
-	return ret;
-}
+// Create "cookie cutter" functions for the basic trig functions
+mixin(MathFunc!"sin");
+mixin(MathFunc!"cos");
+mixin(MathFunc!"tan");
+mixin(MathFunc!"asin");
+mixin(MathFunc!"acos");
+mixin(MathFunc!"atan");
+mixin(MathFunc!"sinh");
+mixin(MathFunc!"cosh");
+mixin(MathFunc!"tanh");
+mixin(MathFunc!"asinh");
+mixin(MathFunc!"acosh");
+mixin(MathFunc!"atanh");
+mixin(MathFunc!("abs","fabs"));
 
 Token bi_log(ref Token[] argv, ref Environment env)
 {
@@ -573,22 +436,7 @@ Token bi_log(ref Token[] argv, ref Environment env)
 			ret.d = 0;
 		}
 	} else {
-		throw new OratrArgumentCountException(argv.length,"log","1");
+		throw new OratrArgumentCountException(argv.length,"log","1-2");
 	}
 	return ret;
 }
-
-Token bi_abs(ref Token[] argv, ref Environment env)
-{
-	if(argv.length != 1) {
-		throw new OratrArgumentCountException(argv.length,"abs","1");
-	}
-	Token ret = argv[0];
-	ret = env.eval(ret);
-	ret.d = fabs(ret.d);
-	if(approxEqual(ret.d,0)) {
-		ret.d = 0;
-	}
-	return ret;
-}
-
