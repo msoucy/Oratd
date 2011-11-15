@@ -3,6 +3,8 @@ import environment;
 import errors;
 import bi_vars;
 import std.string;
+import std.algorithm;
+import std.range;
 
 void import_manipulations(ref Environment env)
 {
@@ -13,10 +15,17 @@ void import_manipulations(ref Environment env)
 	mixin(AddFunc!"map2");
 }
 
+class OratrInvalidStrideException : OratrBaseException {
+	this( int stride, string file = __FILE__, size_t line = __LINE__ )
+    {
+        super( format("Invalid array stride %s",stride), file, line );
+    }
+}
+
 Token bi_slice(ref Token[] argv, ref  Environment env)
 {
 	Token ret;
-	if(argv.length == 3) {
+	if(argv.length >= 3 && argv.length <= 4) {
 		// It's an array or a string
 		ret = argv[0];
 		ret = env.eval(ret);
@@ -28,14 +37,28 @@ Token bi_slice(ref Token[] argv, ref  Environment env)
 		Token stop = argv[2];
 		stop = env.eval(stop);
 		if(stop.type != Token.VarType.tNumeric) {
-			throw new OratrInvalidArgumentException(vartypeToStr(stop.type),2);
+			if(stop.type == Token.VarType.tOpcode && stop.str == "@") {
+				stop = Token(-1);
+			} else {
+				throw new OratrInvalidArgumentException(vartypeToStr(stop.type),2);
+			}
 		}
 		if(start.d < 0) {
 			throw new OratrOutOfRangeException("",cast(int)start.d);
 		}
-		start.d = cast(uint)start.d;
-		stop.d = cast(uint)stop.d;
+		int stride = 1;
+		if(argv.length == 4) {
+			Token strideTok = argv[3];
+			strideTok = env.eval(strideTok);
+			if(strideTok.type != Token.VarType.tNumeric) {
+				throw new OratrInvalidArgumentException(vartypeToStr(strideTok.type),3);
+			}
+			stride = cast(int)strideTok.d;
+		}
 		if(ret.type == Token.VarType.tString) {
+			start.d = cast(uint)start.d;
+			if(stop.d < 0) stop.d = ret.str.length - stop.d - 1;
+			stop.d = cast(uint)stop.d;
 			if(stop.d > ret.str.length) {
 				throw new OratrOutOfRangeException("string", cast(int)stop.d);
 			}
@@ -44,7 +67,26 @@ Token bi_slice(ref Token[] argv, ref  Environment env)
 			} else {
 				ret.str = cast(string)(ret.str[cast(uint)stop.d .. cast(uint)start.d].dup.reverse);
 			}
+			if(stride>0) {
+				auto backstr = ret.str;
+				ret.str = "";
+				foreach(ch;std.range.stride(backstr,stride)) {
+					ret.str ~= ch;
+				}
+			} else if(stride<0) {
+				char[] backstr = ret.str.dup.reverse;
+				ret.str = "";
+				foreach(ch;std.range.stride(backstr,-stride)) {
+					ret.str ~= ch;
+				}
+			} else {
+				// This shouldn't happen...
+				throw new OratrInvalidStrideException(0);
+			}
 		} else if(ret.type == Token.VarType.tArray) {
+			start.d = cast(uint)start.d;
+			if(stop.d < 0) stop.d = ret.arr.length - stop.d - 1;
+			stop.d = cast(uint)stop.d;
 			if(stop.d > ret.arr.length) {
 				throw new OratrOutOfRangeException("", cast(int)stop.d);
 			}
@@ -52,6 +94,22 @@ Token bi_slice(ref Token[] argv, ref  Environment env)
 				ret.arr = ret.arr[cast(uint)start.d .. cast(uint)stop.d];
 			} else {
 				ret.arr = ret.arr[cast(uint)stop.d .. cast(uint)start.d].reverse;
+			}
+			if(stride>0) {
+				auto backarr = ret.arr;
+				ret.arr.clear;
+				foreach(ch;std.range.stride(backarr,stride)) {
+					ret.arr ~= ch;
+				}
+			} else if(stride<0) {
+				auto backarr = ret.arr.dup.reverse;
+				ret.arr.clear;
+				foreach(ch;std.range.stride(backarr,-stride)) {
+					ret.arr ~= ch;
+				}
+			} else {
+				// This shouldn't happen...
+				throw new OratrInvalidStrideException(0);
 			}
 		} else {
 			throw new OratrInvalidArgumentException(vartypeToStr(ret.type),0);
