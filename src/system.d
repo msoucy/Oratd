@@ -16,7 +16,7 @@ int charToInt(char c) {
 	return 0;
 }
 
-real strToDouble(string str, int base)
+real strToDouble(string str, uint base=10)
 {
 	// Assume that the input string is well-formed
 	// The lexer will handle that.

@@ -33,46 +33,22 @@ public:
 	string str = "";
 	@property {
 		real d() {
-			try {
-				return to!real(str);
-			} catch (Exception e) {
-				return real.nan;
+			real ret;
+			char* p = cast(char*)&ret;
+			foreach(i,char c;str) {
+				p[i] = c;
 			}
+			return ret;
 		}
 		void d(real _d) {
-			static if(0) str = to!(string)(_d);
-			else pd = _d;
-		}
-		void pd(real _d) {
-			if(approxEqual(_d,cast(long)_d,1e-15)) {
-				str = to!(string)(_d);
-			} else {
-				str = format("%.15f",_d);
-				if(indexOf(str,'.')!=-1) {
-					auto index = indexOf(str,'.');
-					bool detected = false;
-					for(uint i=index+1;i<str.length && i<index+6;i++) {
-						if(str[i]!='0') {
-							detected=true;
-							break;
-						}
-					}
-					if(!detected) {
-						str = str[0..index+6];
-					}
-				}
-				munchEnd(str,"0");
-				if(str.length && str[$-1]=='.') {str = str[0..$-1];}
+			char* p = cast(char*)&_d;
+			str = "";
+			foreach(i;0..real.sizeof) {
+				str ~= cast(char)p[i];
 			}
-			if(str=="") str = "0";
 		}
 	}
 	// Helper functions that let me do construction-time editing
-	ref Token withPreciseNumeric(real _d) {
-		pd = _d;
-		type = VarType.tNumeric;
-		return this;
-	}
 	ref Token withNumeric(real _d) {
 		d = _d;
 		type = VarType.tNumeric;

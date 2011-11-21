@@ -24,7 +24,7 @@ public:
 		int recastLoc = std.string.indexOf(src,'$');
 		int offsetLoc = std.string.lastIndexOf(src,':');
 		if(offsetLoc > recastLoc && recastLoc != -1) {
-			throw(new OratrParseException(std.string.format("Illegal offset after cast in `%s`", src)));
+			throw new OratrParseException(std.string.format("Illegal offset after cast in `%s`", src));
 		}
 		string key;
 		string newcast;

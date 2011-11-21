@@ -2,6 +2,7 @@ import token;
 import environment;
 import errors;
 import bi_vars;
+import system;
 import std.string;
 import std.algorithm;
 import std.range;
@@ -141,7 +142,7 @@ Token bi_trim(ref Token[] argv, ref  Environment env)
 			if(precision.type != Token.VarType.tString) {
 				throw new OratrInvalidArgumentException(vartypeToStr(precision.type),1);
 			}
-			ret.str = format(format("%%%sf",precision.str),ret.d);
+			ret.d = strToDouble(format(format("%%%sf",precision.str),ret.d));
 		} else if(ret.type == Token.VarType.tString) {
 			Token delims = argv[1];
 			delims = env.eval(delims);

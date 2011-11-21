@@ -21,7 +21,7 @@ string makeString(ref Token tok, ref Environment env)
 	string ret;
 	switch(tok.type) {
 		case Token.VarType.tNumeric: {
-			ret = format("%s",tok.str);
+			ret = format("%s",tok.d);
 			break;
 		}
 		case Token.VarType.tOpcode:

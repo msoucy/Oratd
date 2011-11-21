@@ -34,7 +34,12 @@ Token bi_null(ref Token[] argv, ref Environment env) {
 }
 
 Token bi_exit(ref Token[] argv, ref Environment env) {
-	exit(0);
+	Token ret;
+	if(argv.length == 1 && (ret = argv[0], ret = env.eval(ret), ret.type == Token.VarType.tNumeric)) {
+		exit(cast(uint)ret.d);
+	} else {
+		exit(0);
+	}
 	assert(0);
 }
 
@@ -286,7 +291,7 @@ Token bi_for(ref Token[] argv, ref Environment env)
 		env.scopes[$-1]["__iterator__"] = Token();
 		init.arr = [Token("__iterator__").withType(Token.VarType.tVarname),
 					Token("=").withType(Token.VarType.tOpcode),
-					Token("0").withType(Token.VarType.tNumeric)];
+					Token(0)];
 		init.type = Token.VarType.tCode;
 		cond.arr = [Token("__iterator__").withType(Token.VarType.tVarname),
 					Token("<").withType(Token.VarType.tOpcode),
@@ -294,7 +299,7 @@ Token bi_for(ref Token[] argv, ref Environment env)
 		cond.type = Token.VarType.tCode;
 		incr.arr = [Token("__iterator__").withType(Token.VarType.tVarname),
 					Token("+=").withType(Token.VarType.tOpcode),
-					Token("1").withType(Token.VarType.tNumeric)];
+					Token(1)];
 		incr.type = Token.VarType.tCode;
 	} else {
 		// It has to be 4, because of the previous checks

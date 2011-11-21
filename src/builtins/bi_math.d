@@ -29,12 +29,12 @@ void import_math(ref Environment env) {
 	
 	// Rounding errors cause problems in precision for PI and trig operations
 	// Manually specify more precision
-	env.scopes[0]["PI"] = Token().withType(Token.VarType.tNumeric).withPreciseNumeric(PI);
-	env.scopes[0]["E"] = Token().withType(Token.VarType.tNumeric).withPreciseNumeric(E);
-	env.scopes[0]["SQRT2"] = Token().withType(Token.VarType.tNumeric).withPreciseNumeric(SQRT2);
-	env.scopes[0]["EPSILON"] = Token().withType(Token.VarType.tNumeric).withPreciseNumeric(1e-5);
-	env.scopes[0]["true"] = Token().withType(Token.VarType.tNumeric).withPreciseNumeric(1);
-	env.scopes[0]["false"] = Token().withType(Token.VarType.tNumeric).withPreciseNumeric(0);
+	env.scopes[0]["PI"] = Token(PI);
+	env.scopes[0]["E"] = Token(E);
+	env.scopes[0]["SQRT2"] = Token(SQRT2);
+	env.scopes[0]["EPSILON"] = Token(1e-16);
+	env.scopes[0]["true"] = Token(1);
+	env.scopes[0]["false"] = Token(0);
 }
 
 real _bi_numeric_math_solve(real a, string op, real b)
