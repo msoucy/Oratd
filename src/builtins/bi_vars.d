@@ -67,7 +67,13 @@ Token bi_tell(ref Token[] argv, ref Environment env)
 	if(argv.length != 1) throw new OratrArgumentCountException(argv.length,"tell","1");
 	Token ret = argv[0];
 	ret = env.eval(ret);
-	ret.str = format("`%s`:%s",ret.str,vartypeToStr(ret.type));
+	if(ret.type == Token.VarType.tNumeric) {
+		ret.str = format("`<%s>`:%s",ret.d,vartypeToStr(ret.type));
+	} else if(ret.type == Token.VarType.tString) {
+		ret.str = format("`%s`:%s",ret.str,vartypeToStr(ret.type));
+	} else {
+		ret.str = format("`<>`:%s",ret.str,vartypeToStr(ret.type));
+	}
 	ret.type = Token.VarType.tString;
 	return ret;
 }

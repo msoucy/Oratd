@@ -5,17 +5,19 @@ import token;
 import errors;
 import system;
 import bi_init;
+import dictionary;
 
 import std.cstream;
 import std.path;
 import std.file;
 
 void import_imports(ref Environment env) {
-	mixin(AddFunc!("run"));
-	mixin(AddFunc!("source"));
+	mixin(AddFunc!"import");
+	mixin(AddFunc!"run");
+	mixin(AddFunc!"source");
 }
 
-Token _bi_run_code(ref Token[] argv, ref Environment env, string name, bool scopeIn)
+Token _bi_run_code(ref Token[] argv, ref Environment env, string name, ushort scopeIn)
 {
 	if(argv.length != 1) {
 		throw new OratrArgumentCountException(argv.length,name,"1");
@@ -30,11 +32,13 @@ Token _bi_run_code(ref Token[] argv, ref Environment env, string name, bool scop
 		funcs[filename](env);
 		return *env.evalVarname("__return__");
 	} else if(isAbsolute(filename)) {
-		if(isFile(filename)) {
+		if(exists(filename) && isFile(filename)) {
 			parsetest = new File(filename, FileMode.In);
 		} else {
-			defaultExtension(filename,FILEXT);
-			parsetest = new File(filename, FileMode.In);
+			filename = defaultExtension(filename,FILEXT);
+			if(exists(filename) && isFile(filename)) {
+				parsetest = new File(filename, FileMode.In);
+			}
 		}
 		if(!parsetest.isOpen()) {
 			delete parsetest;
@@ -42,15 +46,19 @@ Token _bi_run_code(ref Token[] argv, ref Environment env, string name, bool scop
 	} else {
 		foreach(ref p;env.evalVarname("__path__").arr) {
 			auto path = absolutePath(filename,p.str);
-			if(isFile(path)) {
+			if(exists(path) && isFile(path)) {
 				parsetest = new File(path,FileMode.In);
 				break;
-			} else if(isFile(defaultExtension(path,FILEXT))) {
-				parsetest = new File(defaultExtension(path,FILEXT));
+			} else {
+				path = defaultExtension(path,FILEXT);
+				if(exists(path) && isFile(path)) {
+					parsetest = new File(path, FileMode.In);
+					break;
+				}
 			}
 		}
 	}
-	if(!parsetest.isOpen()) {
+	if(!parsetest || !parsetest.isOpen()) {
 		throw new OratrMissingFileException(filename);
 	}
 	if(scopeIn) {
@@ -69,9 +77,28 @@ Token _bi_run_code(ref Token[] argv, ref Environment env, string name, bool scop
 		}
 	} while(!parsetest.eof());
 	env.evalVarname("__name__").str = oldName;
-	if(scopeIn) env.outscope();
+	if(scopeIn) {
+		if(scopeIn >= 2) {
+			auto lastScope = env.scopes[$-1];
+			env.outscope();
+			*env.evalVarname(baseName(filename, FILEXT)) = Token().withType(Token.VarType.tDictionary);
+			// Turn the variables into a Module
+			auto mod = Dictionary(*env.evalVarname(baseName(filename,FILEXT)));
+			foreach(string index, ref var;lastScope) {
+				mod[index] = var;
+			}
+			*env.evalVarname(baseName(filename, FILEXT)) = *mod._tok;
+		} else {
+			env.outscope();
+		}
+	}
 	delete parsetest;
 	return *env.evalVarname("__return__");
+}
+
+Token bi_import(ref Token[] argv, ref Environment env)
+{
+	return _bi_run_code(argv,env,"import",2);
 }
 
 Token bi_run(ref Token[] argv, ref Environment env)

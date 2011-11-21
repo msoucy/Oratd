@@ -13,7 +13,7 @@ public:
 	enum VarType {
 		tNone, tComment,
 		tCode, tCompoundStatement, tString, tNumeric, tRawArray, tArray,
-		tVarname, tTypeID,
+		tVarname, tTypeID, tDictionary,
 		tType, tFunction, tOpcode, tSpecial, tBuiltin, tRecast, tVariadicFunction,
 		tCommandSeperator, tArrayElementSeperator,
 		tVarOffsetSeperator, tClosingParen, tClosingBrace, tClosingBracket,
@@ -91,6 +91,8 @@ string vartypeToStr(Token.VarType v)
 			return "Variable Name";
 		case Token.VarType.tTypeID:
 			return "Type ID";
+		case Token.VarType.tDictionary:
+			return "Dictionary";
 		case Token.VarType.tType:
 			return "";
 		case Token.VarType.tFunction:

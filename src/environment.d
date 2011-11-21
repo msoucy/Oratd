@@ -3,6 +3,7 @@ import typedefs;
 import errors;
 import tokenize;
 import parse;
+import dictionary;
 import std.cstream;
 
 template AddFunc(string name, string funcname="bi_"~name) {
@@ -72,6 +73,9 @@ public:
 				}
 			} else if(ret.type == Token.VarType.tType) {
 				// Things are offset by data name, use the lookup table in env
+			} else if(ret.type == Token.VarType.tDictionary) {
+				// Things are offset by data name, using the module lookup
+				ret = &(Dictionary(*ret)[o]);
 			} else if(ret.type == Token.VarType.tString) {
 				Token off = makeToken(o,din,BraceType.bNone);
 				off = eval(off);
