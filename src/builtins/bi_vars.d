@@ -31,8 +31,7 @@ Token bi_set(ref Token[] argv, ref Environment env)
 	}
 	Token *orig = env.evalVarname(argv[0].str);
 	if(argv.length == 3) {
-		ret = argv[2];
-		ret = env.eval(ret);
+		ret = env.eval(argv[2]);
 	} else {
 		parse.parse(argv[2..$], env);
 		ret = *env.evalVarname("__return__");
@@ -55,8 +54,7 @@ Token bi_typeid(ref Token[] argv, ref Environment env)
 	if(argv.length != 1) {
 		throw new OratrArgumentCountException(argv.length,"typeid","1");
 	}
-	Token ret=argv[0];
-	ret = env.eval(ret);
+	Token ret = env.eval(argv[0]);
 	ret.str = vartypeToStr(ret.type);
 	ret.type = Token.VarType.tTypeID;
 	return ret;
@@ -65,8 +63,7 @@ Token bi_typeid(ref Token[] argv, ref Environment env)
 Token bi_tell(ref Token[] argv, ref Environment env)
 {
 	if(argv.length != 1) throw new OratrArgumentCountException(argv.length,"tell","1");
-	Token ret = argv[0];
-	ret = env.eval(ret);
+	Token ret = env.eval(argv[0]);
 	if(ret.type == Token.VarType.tNumeric) {
 		ret.str = format("`<%s>`:%s",ret.d,vartypeToStr(ret.type));
 	} else if(ret.type == Token.VarType.tString) {
@@ -81,8 +78,7 @@ Token bi_function(ref Token[] argv, ref Environment env)
 {
 	Token ret;
 	if(!argv.length) throw new OratrArgumentCountException(argv.length,"function","1+");
-	Token code = argv[$-1];
-	code = env.eval(code);
+	Token code = env.eval(argv[$-1]);
 	if(code.type != Token.VarType.tCode) {
 		throw new OratrInvalidArgumentException(vartypeToStr(code.type),argv.length-1);
 	}
@@ -114,8 +110,7 @@ Token bi_call(ref Token[] argv, ref Environment env)
 {
 	Token ret;
 	if(!argv.length) throw new OratrArgumentCountException(argv.length,"call","1+");
-	Token func = argv[0];
-	func = env.eval(func);
+	Token func = env.eval(argv[0]);
 	if(func.type != Token.VarType.tFunction && func.type != Token.VarType.tVariadicFunction) {
 		throw new OratrInvalidArgumentException(vartypeToStr(func.type),0);
 	}
@@ -131,8 +126,7 @@ Token bi_call(ref Token[] argv, ref Environment env)
 				throw new OratrInvalidArgumentException(vartypeToStr(argv[i+1].type),i+1);
 			}
 		}
-		Token tmp = argv[i+1];
-		tmp = env.eval(tmp);
+		Token tmp = env.eval(argv[i+1]);
 		env.scopes[$-1][func.arr[0].arr[i].str] = tmp;
 	}
 	if(func.type == Token.VarType.tVariadicFunction && argv.length-1 > func.arr[0].arr.length) {

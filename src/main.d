@@ -34,7 +34,7 @@ void main(string[] argv)
 	{
 		// Add the important locations to the path
 		env.scopes[0]["__path__"] = Token().withType(Token.VarType.tArray);
-		env.scopes[0]["__path__"].arr ~= Token(getcwd).withType(Token.VarType.tString);
+		env.scopes[0]["__path__"].arr ~= Token(getcwd()).withType(Token.VarType.tString);
 		version(Posix) {
 			// Get the directory of the program
 			// This will probably fail for symlinks, but std.path.readLink is erroring for me

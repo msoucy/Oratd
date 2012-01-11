@@ -28,7 +28,7 @@ string makeString(ref Token tok, ref Environment env)
 		case Token.VarType.tString:
 		case Token.VarType.tTypeID:
 		case Token.VarType.tSpecial: {
-			ret = format("%s", tok.str);
+			ret = tok.str;
 			break;
 		}
 		case Token.VarType.tArray: {
@@ -96,11 +96,7 @@ Token _bi_printto(ref Token[] argv, ref Environment env, OutputStream ostr)
 	foreach(ref ret;argv) {
 		// Crashes below
 		ret = env.eval(ret);
-		if(ret.type == Token.VarType.tString) {
-			ostr.writef("%s", ret.str);
-		} else {
-			ostr.writef("%s", makeString(ret,env));
-		}
+		ostr.writef("%s", makeString(ret,env));
 		retval = ret;
 	}
 	return retval;

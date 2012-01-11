@@ -206,12 +206,10 @@ Token bi_math(ref Token[] argv, ref Environment env)
 	Token tmp;
 	// Preprocessing to make sure the {2 -3} bug isn't in here
 	for(uint i=0;i<argv.length;i++) {
-		tmp = argv[i];
-		tmp = env.eval(tmp);
+		tmp = env.eval(argv[i]);
 		argv[i] = tmp;
 		if(tmp.type == Token.VarType.tNumeric && i<(argv.length-1)) {
-			tmp = argv[++i];
-			tmp = env.eval(tmp);
+			tmp = env.eval(argv[++i]);
 			if(tmp.type == Token.VarType.tNumeric) {
 				Token op = "+";
 				op.type = Token.VarType.tOpcode;
@@ -224,12 +222,12 @@ Token bi_math(ref Token[] argv, ref Environment env)
 	Token[] s;
 	Token[] postfix;
 	
-	for(uint i=0;i<argv.length;i++) {
-		argv[i] = env.eval(argv[i]);
-		switch(argv[i].type) {
+	foreach(uint i,ref tok;argv) {
+		tok = env.eval(tok);
+		switch(tok.type) {
 		case Token.VarType.tOpcode: {
 			while(s.length) {
-				int new_prio = Operator_Priority(argv[i].str);
+				int new_prio = Operator_Priority(tok.str);
 				int old_prio = Operator_Priority(s[$-1].str);
 				if(new_prio > old_prio) {
 					// New operator gets pushed directly onto the stack
@@ -240,7 +238,7 @@ Token bi_math(ref Token[] argv, ref Environment env)
 					s.length -= 1;
 				}
 			}
-			s ~= argv[i];
+			s ~= tok;
 			break;
 		}
 		case Token.VarType.tArray:
@@ -248,11 +246,11 @@ Token bi_math(ref Token[] argv, ref Environment env)
 		case Token.VarType.tFunction:
 		case Token.VarType.tNumeric:
 		case Token.VarType.tString: {
-			postfix ~= argv[i];
+			postfix ~= tok;
 			break;
 		}
 		default: {
-			throw new OratrInvalidArgumentException(token.vartypeToStr(argv[i].type), i);
+			throw new OratrInvalidArgumentException(token.vartypeToStr(tok.type), i);
 		}
 		};
 	}
@@ -264,8 +262,8 @@ Token bi_math(ref Token[] argv, ref Environment env)
 	// s is now empty, so we'll reuse it
 	
 	// Step 2: solve the postfix expression
-	for(uint i=0;i<postfix.length;i++) {
-		switch(postfix[i].type) {
+	foreach(uint i,ref tok;postfix) {
+		switch(tok.type) {
 		case Token.VarType.tOpcode: {
 			// Pop two and do the matching operation
 			// They're done backwards...just part of the algorithm
@@ -278,7 +276,7 @@ Token bi_math(ref Token[] argv, ref Environment env)
 			} else {
 				throw new OratrMissingOperandException();
 			}
-			s ~= _bi_math_solve(a,postfix[i],b);
+			s ~= _bi_math_solve(a,tok,b);
 			break;
 		}
 		case Token.VarType.tArray:
@@ -286,12 +284,12 @@ Token bi_math(ref Token[] argv, ref Environment env)
 		case Token.VarType.tFunction:
 		case Token.VarType.tNumeric:
 		case Token.VarType.tString: {
-			s ~= postfix[i];
+			s ~= tok;
 			break;
 		}
 		default:
 			// It should never reach this, but just in case...
-			throw new OratrInvalidArgumentException(token.vartypeToStr(argv[i].type), i);
+			throw new OratrInvalidArgumentException(token.vartypeToStr(tok.type), i);
 		};
 	}
 	return s[$-1];
@@ -302,9 +300,8 @@ Token bi_int(ref Token[] argv, ref Environment env)
 	if(argv.length != 1) {
 		throw new OratrArgumentCountException(argv.length,"int","1");
 	}
-	Token ret = argv[0];
-	ret = Token(lrint(env.eval(ret).d));
-	return ret.withType(Token.VarType.tNumeric);
+	Token ret = Token(lrint(env.eval(argv[0]).d));
+	return ret;
 }
 
 Token bi_rand(ref Token[] argv, ref Environment env)
@@ -316,8 +313,7 @@ Token bi_rand(ref Token[] argv, ref Environment env)
 		break;
 	}
 	case 1: {
-		Token high = argv[0];
-		high = env.eval(high);
+		Token high = env.eval(argv[0]);
 		if(high.type != Token.VarType.tNumeric) {
 			throw new OratrInvalidArgumentException(vartypeToStr(high.type),0);
 		}
@@ -326,10 +322,8 @@ Token bi_rand(ref Token[] argv, ref Environment env)
 		break;
 	}
 	case 2: {
-		Token low = argv[0];
-		Token high = argv[1];
-		low = env.eval(low);
-		high = env.eval(high);
+		Token low = env.eval(argv[0]);
+		Token high = env.eval(argv[1]);
 		if(low.type != Token.VarType.tNumeric) {
 			throw new OratrInvalidArgumentException(vartypeToStr(low.type),0);
 		}
@@ -355,8 +349,7 @@ Token bi_frand(ref Token[] argv, ref Environment env)
 		break;
 	}
 	case 1: {
-		Token high = argv[0];
-		high = env.eval(high);
+		Token high = env.eval(argv[0]);
 		if(high.type != Token.VarType.tNumeric) {
 			throw new OratrInvalidArgumentException(vartypeToStr(high.type),0);
 		}
@@ -365,10 +358,8 @@ Token bi_frand(ref Token[] argv, ref Environment env)
 		break;
 	}
 	case 2: {
-		Token low = argv[0];
-		Token high = argv[1];
-		low = env.eval(low);
-		high = env.eval(high);
+		Token low = env.eval(argv[0]);
+		Token high = env.eval(argv[1]);
 		if(low.type != Token.VarType.tNumeric) {
 			throw new OratrInvalidArgumentException(vartypeToStr(low.type),0);
 		}
@@ -391,12 +382,9 @@ template MathFunc(string funcname, string actualfunc = funcname) {
 	if(argv.length != 1) {
 		throw new OratrArgumentCountException(argv.length,"`~funcname~`","1");
 	}
-	Token ret = argv[0];
-	ret = env.eval(ret);
+	Token ret = env.eval(argv[0]);
+	if(ret.type != Token.VarType.tNumeric) throw new OratrInvalidArgumentException("`~funcname~`",0);
 	ret.d = `~actualfunc~`(ret.d);
-	if(approxEqual(ret.d,0)) {
-		ret.d = 0;
-	}
 	return ret;
 }`;
 }
@@ -420,17 +408,14 @@ Token bi_log(ref Token[] argv, ref Environment env)
 {
 	Token ret;
 	if(argv.length == 1) {
-		ret = argv[0];
-		ret = env.eval(ret);
+		ret = env.eval(argv[0]);
 		ret.d = log(ret.d);
 		if(approxEqual(ret.d,0)) {
 			ret.d = 0;
 		}
 	} else if(argv.length == 2) {
-		Token base = argv[0];
-		base = env.eval(base);
-		ret = argv[1];
-		ret = env.eval(ret);
+		Token base = env.eval(argv[0]);
+		ret = env.eval(argv[1]);
 		ret.d = log(ret.d)/log(base.d);
 		if(approxEqual(ret.d,0)) {
 			ret.d = 0;

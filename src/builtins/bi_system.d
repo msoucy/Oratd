@@ -31,8 +31,7 @@ Token bi_getenv(ref Token[] argv, ref Environment env)
 	if(argv.length != 1) {
 		throw new OratrArgumentCountException(argv.length,"getenv","1");
 	}
-	Token envstr = argv[0];
-	envstr = env.eval(envstr);
+	Token envstr = env.eval(argv[0]);
 	if(envstr.type != Token.VarType.tString) {
 		throw new OratrInvalidArgumentException(vartypeToStr(envstr.type),0);
 	}

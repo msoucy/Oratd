@@ -28,15 +28,12 @@ Token bi_slice(ref Token[] argv, ref  Environment env)
 	Token ret;
 	if(argv.length >= 3 && argv.length <= 4) {
 		// It's an array or a string
-		ret = argv[0];
-		ret = env.eval(ret);
-		Token start = argv[1];
-		start = env.eval(start);
+		ret = env.eval(argv[0]);
+		Token start = env.eval(argv[1]);
 		if(start.type != Token.VarType.tNumeric) {
 			throw new OratrInvalidArgumentException(vartypeToStr(start.type),1);
 		}
-		Token stop = argv[2];
-		stop = env.eval(stop);
+		Token stop = env.eval(argv[2]);
 		if(stop.type != Token.VarType.tNumeric) {
 			if(stop.type == Token.VarType.tOpcode && stop.str == "@") {
 				stop = Token(-1);
@@ -49,8 +46,7 @@ Token bi_slice(ref Token[] argv, ref  Environment env)
 		}
 		int stride = 1;
 		if(argv.length == 4) {
-			Token strideTok = argv[3];
-			strideTok = env.eval(strideTok);
+			Token strideTok = env.eval(argv[3]);
 			if(strideTok.type != Token.VarType.tNumeric) {
 				throw new OratrInvalidArgumentException(vartypeToStr(strideTok.type),3);
 			}
@@ -126,26 +122,23 @@ Token bi_trim(ref Token[] argv, ref  Environment env)
 	// Trim a number to a precision, or a string's leading/trailing signs (default whitespace)
 	Token ret;
 	if(argv.length == 1) {
-		ret = argv[0];
-		ret = env.eval(ret);
+		ret = env.eval(argv[0]);
 		if(ret.type != Token.VarType.tString) {
 			throw new OratrInvalidArgumentException(vartypeToStr(ret.type),0);
 		}
 		ret.str = strip(ret.str);
 	} else if(argv.length == 2 ) { 
-		ret = argv[0];
-		ret = env.eval(ret);
+		ret = env.eval(argv[0]);
 		if(ret.type == Token.VarType.tNumeric) {
 			// trim the decimals
-			Token precision = argv[1];
-			precision = env.eval(precision);
+			Token precision = env.eval(argv[1]);
 			if(precision.type != Token.VarType.tString) {
 				throw new OratrInvalidArgumentException(vartypeToStr(precision.type),1);
 			}
+			// This is needed to properly handle the format string without too many evil tricks
 			ret.d = strToDouble(format(format("%%%sf",precision.str),ret.d));
 		} else if(ret.type == Token.VarType.tString) {
-			Token delims = argv[1];
-			delims = env.eval(delims);
+			Token delims = env.eval(argv[1]);
 			if(delims.type != Token.VarType.tString) {
 				throw new OratrInvalidArgumentException(vartypeToStr(delims.type),1);
 			}
@@ -168,8 +161,7 @@ Token bi_len(ref Token[] argv, ref Environment env)
 	if(argv.length != 1) {
 		throw new OratrArgumentCountException(argv.length,"len","1");
 	}
-	ret = argv[0];
-	ret = env.eval(ret);
+	ret = env.eval(argv[0]);
 	if(ret.type == Token.VarType.tArray) {
 		ret = Token(ret.arr.length);
 	} else if(ret.type == Token.VarType.tString) {
@@ -183,8 +175,7 @@ Token bi_len(ref Token[] argv, ref Environment env)
 Token bi_store(ref Token[] argv, ref Environment env)
 {
 	if(!argv.length) throw new OratrArgumentCountException(0,"store","1+");
-	Token ret = argv[0];
-	ret = env.eval(ret);
+	Token ret = env.eval(argv[0]);
 	if(ret.type != Token.VarType.tArray) {
 		throw new OratrInvalidArgumentException(vartypeToStr(ret.type),0);
 	}
@@ -198,8 +189,7 @@ Token bi_store(ref Token[] argv, ref Environment env)
 	}
 	uint i;
 	for(i=1;i<argv.length;i++) {
-		Token val = ret.arr[i-1];
-		val = env.eval(val);
+		Token val = env.eval(ret.arr[i-1]);
 		*env.evalVarname(argv[i].str) = val;
 	}
 	ret.arr = ret.arr[(i-1)..$];
@@ -209,13 +199,11 @@ Token bi_store(ref Token[] argv, ref Environment env)
 Token bi_map2(ref Token[] argv, ref Environment env)
 {
 	if(!argv.length) throw new OratrArgumentCountException(0,"map","2"); 
-	Token func = argv[0];
-	func = env.eval(func);
+	Token func = env.eval(argv[0]);
 	if(func.type != Token.VarType.tFunction) {
 		throw new OratrInvalidArgumentException(vartypeToStr(func.type),0);
 	}
-	Token arr = argv[1];
-	arr = env.eval(arr);
+	Token arr = env.eval(argv[1]);
 	if(arr.type != Token.VarType.tArray) {
 		throw new OratrInvalidArgumentException(vartypeToStr(arr.type),1);
 	}

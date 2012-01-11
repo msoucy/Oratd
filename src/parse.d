@@ -91,8 +91,7 @@ ref Environment parse(ref Token[] argv, ref Environment env)
 	foreach(arglist;args) {
 		if(!arglist.length) {continue;}
 		condenseArguments(arglist,env);
-		Token func = arglist[0];
-		func = env.eval(func);
+		Token func = env.eval(arglist[0]);
 		if(arglist.length > 2 && isSettingOpcode(arglist[1].str)) {
 			ret = bi_set(arglist,env);
 		} else {

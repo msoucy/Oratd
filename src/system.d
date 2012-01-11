@@ -25,7 +25,7 @@ real strToDouble(string str, uint base=10)
 	real mantissa = 0;
 	
 	
-	for(uint i=0;i<str.length;i++) {
+	foreach(uint i;0..str.length) {
 		if(str[i] == '.') {
 			mantissa = 1;
 		} else {

@@ -14,7 +14,7 @@ template AddFunc(string name, string funcname="bi_"~name) {
 
 struct Environment {
 private:
-	typedef Token[string] Scope;
+	alias Token[string] Scope;
 public:
 	enum Flags {
 		Break=0x01

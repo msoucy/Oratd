@@ -23,19 +23,17 @@ Token bi_null(ref Token[] argv, ref Environment env) {
 	Token ret;
 	if(argv.length) {
 		foreach(arg;argv) {
-			ret = arg;
-			ret = env.eval(ret);
+			ret = env.eval(arg);
 		}
 	} else {
-		ret = Token("__return__").withType(Token.VarType.tVarname);
-		ret = env.eval(ret);
+		ret = *env.evalVarname("__return__");
 	}
 	return ret;
 }
 
 Token bi_exit(ref Token[] argv, ref Environment env) {
 	Token ret;
-	if(argv.length == 1 && (ret = argv[0], ret = env.eval(ret), ret.type == Token.VarType.tNumeric)) {
+	if(argv.length == 1 && (ret = env.eval(argv[0]), ret.type == Token.VarType.tNumeric)) {
 		exit(cast(uint)ret.d);
 	} else {
 		exit(0);
@@ -126,10 +124,8 @@ Token bi_if(ref Token[] argv, ref Environment env)
 		throw new OratrArgumentCountExceptionControlStructure(
 			argv.length,"if","2+ matching tokens and");
 	}
-	Token cond = argv[0];
-	cond = env.eval(cond);
-	Token code = argv[1];
-	code = env.eval(code);
+	Token cond = env.eval(argv[0]);
+	Token code = env.eval(argv[1]);
 	if(code.type != Token.VarType.tCode) {
 		throw new OratrInvalidCodeException();
 	}
@@ -142,8 +138,7 @@ Token bi_if(ref Token[] argv, ref Environment env)
 			// There's no other clause
 			if(argv.length >= 4 && argv[2].str == "else" && argv[2].type == Token.VarType.tVarname) {
 				if(argv.length == 4) {
-					code = argv[3];
-					code = env.eval(code);
+					code = env.eval(argv[3]);
 					if(code.type != Token.VarType.tCode) {
 						throw new OratrInvalidCodeException();
 					}
@@ -171,8 +166,7 @@ Token bi_switch(ref Token[] argv, ref Environment env)
 		throw new OratrArgumentCountExceptionControlStructure(
 			argv.length,"switch","3+ matching tokens and");
 	}
-	Token baseValue = argv[0];
-	baseValue = env.eval(baseValue);
+	Token baseValue = env.eval(argv[0]);
 	if(baseValue.type != Token.VarType.tNumeric &&
 		baseValue.type != Token.VarType.tString &&
 		baseValue.type != Token.VarType.tArray &&
@@ -180,7 +174,7 @@ Token bi_switch(ref Token[] argv, ref Environment env)
 		throw new OratrInvalidArgumentException(vartypeToStr(baseValue.type),0);
 	}
 	execStatement:
-	for(uint i=1;i<argv.length;i++) {
+	foreach(uint i;1..argv.length) {
 		Token val = argv[i];
 		bool runCode = false;
 		if(val.str == "default" && val.type == Token.VarType.tVarname) {
@@ -200,7 +194,7 @@ Token bi_switch(ref Token[] argv, ref Environment env)
 					runCode = false;
 					break;
 				}
-				for(uint j=0;j<val.arr.length;j++) {
+				foreach(uint j;0..val.arr.length) {
 					runCode &= (baseValue.arr[j] == val.arr[j]);
 				}
 				break;
@@ -235,15 +229,13 @@ Token bi_while(ref Token[] argv, ref Environment env)
 			argv.length,"while","2");
 	}
 	Token cond = argv[0];
-	Token code = argv[1];
-	code = env.eval(code);
+	Token code = env.eval(argv[1]);
 	if(code.type != Token.VarType.tCode) {
 		throw new OratrInvalidCodeException();
 	}
 	bool runCode = true;
 	while(runCode) {
-		cond = argv[0];
-		cond = env.eval(cond);
+		cond = env.eval(argv[0]);
 		runCode = checkBoolToken(cond,env,0);
 		if(runCode) {
 			parse.parse(code.arr,env);
@@ -283,8 +275,7 @@ Token bi_for(ref Token[] argv, ref Environment env)
 		if(code.type != Token.VarType.tCode) {
 			throw new OratrInvalidArgumentException(vartypeToStr(code.type),2);
 		}
-		amount = argv[0];
-		env.eval(amount);
+		amount = env.eval(argv[0]);
 		if(amount.type != Token.VarType.tNumeric) {
 			throw new OratrInvalidArgumentException(vartypeToStr(amount.type),1);
 		}
@@ -308,18 +299,15 @@ Token bi_for(ref Token[] argv, ref Environment env)
 			throw new OratrInvalidArgumentException(vartypeToStr(code.type),3);
 		}
 		amount = Token(0);
-		init = argv[0];
-		init = env.eval(init);
+		init = env.eval(argv[0]);
 		if(init.type != Token.VarType.tCode) {
 			throw new OratrInvalidArgumentException(vartypeToStr(init.type),0);
 		}
-		cond = argv[1];
-		cond = env.eval(cond);
+		cond = env.eval(argv[1]);
 		if(cond.type != Token.VarType.tCode) {
 			throw new OratrInvalidArgumentException(vartypeToStr(cond.type),1);
 		}
-		incr = argv[2];
-		incr = env.eval(incr);
+		incr = env.eval(argv[2]);
 		if(incr.type != Token.VarType.tCode) {
 			throw new OratrInvalidArgumentException(vartypeToStr(incr.type),2);
 		}
@@ -365,12 +353,11 @@ Token bi_foreach(ref Token[] argv, ref Environment env)
 	} else {
 		value = Token("__iterator__").withType(Token.VarType.tVarname);
 	}
-	source = argv[$-2];
-	source = env.eval(source);
+	source = env.eval(argv[$-2]);
 	if(source.type == Token.VarType.tString) {
 		source.arr = [];
-		foreach(x;source.str) {
-			source.arr ~= Token(x);
+		foreach(char x;source.str) {
+			source.arr ~= Token(""~x);
 		}
 	} else if(source.type != Token.VarType.tArray) {
 		throw new OratrInvalidArgumentException(vartypeToStr(source.type),argv.length-2);

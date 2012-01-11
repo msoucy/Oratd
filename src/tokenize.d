@@ -12,7 +12,6 @@ import std.ascii;
 string doubleQuotedStringRegex = "(\"[^\"\\\\]*(?:\\\\.[^\"\\\\]*)*\")";
 string singleQuotedStringRegex = "(\'[^\'\\\\]*(?:\\\\.[^\'\\\\]*)*\')";
 string singleQuotedRawStringRegex = "(`.*?`)";
-string simpleStringRegex = "(`.*?`)";
 string hexRegex = "((\\+|-)?0[xX][0-9A-Fa-f]*(\\.[0-9A-Fa-f]*)?)";
 string binaryRegex = "([\\+\\-]?0[bB][01]*(\\.[01]*)?)";
 string octalRegex = "([\\+\\-]?0[oO][0-7]*(\\.[0-7]*)?)";
@@ -20,8 +19,6 @@ string decimalRegex = "([\\+\\-]?[0-9]*(\\.[0-9]*)?)";
 string opcodeRegex = "([\\+\\-\\*/\\\\=\\^&!%~\\|<>\\?@]+)";
 string opcodeList = "+\\*/\\=^&!%~|<>?@";
 string varNameRegex = "((?:[a-zA-Z_][a-zA-Z0-9_]*))";
-//string simpleVarNameRegex = "((?:[a-zA-Z_][a-zA-Z0-9_]*))";
-//string varNameRegex = "((?:[a-zA-Z_][a-zA-Z0-9_]*(:[a-zA-Z_][a-zA-Z0-9_]*)*(\\$[a-zA-Z_][a-zA-Z0-9_]*)?))";
 string varNameList = "a-zA-Z_";
 enum BraceType {bNone, bParen, bBracket, bBrace}
 

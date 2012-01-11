@@ -6,7 +6,7 @@ import std.cstream;
 import std.string;
 import std.math;
 
-typedef Token function(ref Token[], ref Environment) Function;
+alias Token function(ref Token[], ref Environment) Function;
 
 struct Token {
 public:
@@ -49,13 +49,17 @@ public:
 		}
 	}
 	// Helper functions that let me do construction-time editing
-	ref Token withNumeric(real _d) {
+	Token withNumeric(real _d) {
 		d = _d;
 		type = VarType.tNumeric;
 		return this;
 	}
-	ref Token withType(VarType t) {
+	Token withType(VarType t) {
 		type = t;
+		return this;
+	}
+	Token withString(string _str) {
+		str = _str;
 		return this;
 	}
 	ref Token withArray(uint s) {
