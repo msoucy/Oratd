@@ -13,6 +13,7 @@ void import_varops(ref Environment env)
 	mixin(AddFunc!("function"));
 	mixin(AddFunc!("tell"));
 	mixin(AddFunc!("call"));
+	mixin(AddFunc!("vcall"));
 	mixin(AddFunc!("local"));
 	mixin(AddFunc!("delete"));
 }
@@ -104,6 +105,23 @@ Token bi_function(ref Token[] argv, ref Environment env)
 		}
 	}
 	return ret;
+}
+
+Token bi_vcall(ref Token[] argv, ref Environment env)
+{
+	// A "variadic" call - pass a function and a list, it calls bi_call using the list as argv 
+	Token ret;
+	if(argv.length != 2) throw new OratrArgumentCountException(argv.length,"vcall","2");
+	Token args = env.eval(argv[1]);
+	if(args.type == Token.VarType.tArray) {
+		auto tokens = argv[0]~args.arr;
+		return bi_call(tokens,env);
+	} else if(args.type == Token.VarType.tDictionary) {
+		// Do stuff here
+		assert(0);
+	} else {
+		throw new OratrInvalidArgumentException(vartypeToStr(args.type),1);
+	}
 }
 
 Token bi_call(ref Token[] argv, ref Environment env)
