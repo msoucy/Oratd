@@ -13,7 +13,7 @@ public:
 	enum VarType {
 		tNone, tComment,
 		tCode, tCompoundStatement, tString, tNumeric, tRawArray, tArray,
-		tVarname, tTypeID, tDictionary,
+		tRawDictionary, tDictionary, tVarname, tTypeID,
 		tType, tFunction, tOpcode, tSpecial, tBuiltin, tRecast, tVariadicFunction,
 		tCommandSeperator, tArrayElementSeperator,
 		tVarOffsetSeperator, tClosingParen, tClosingBrace, tClosingBracket,
@@ -31,23 +31,10 @@ public:
 		type = VarType.tString;
 	}
 	string str = "";
-	@property {
-		real d() {
-			real ret;
-			char* p = cast(char*)&ret;
-			foreach(i,char c;str) {
-				p[i] = c;
-			}
-			return ret;
+	@property ref real d() {
+			str.length = real.sizeof;
+			return *cast(real*)str.ptr;
 		}
-		void d(real _d) {
-			char* p = cast(char*)&_d;
-			str = "";
-			foreach(i;0..real.sizeof) {
-				str ~= cast(char)p[i];
-			}
-		}
-	}
 	// Helper functions that let me do construction-time editing
 	Token withNumeric(real _d) {
 		d = _d;

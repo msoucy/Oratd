@@ -20,7 +20,7 @@ string opcodeRegex = "([\\+\\-\\*/\\\\=\\^&!%~\\|<>\\?@]+)";
 string opcodeList = "+\\*/\\=^&!%~|<>?@";
 string varNameRegex = "((?:[a-zA-Z_][a-zA-Z0-9_]*))";
 string varNameList = "a-zA-Z_";
-enum BraceType {bNone, bParen, bBracket, bBrace}
+enum BraceType {None, Paren, Bracket, Brace, Dict}
 
 string evalStr(string str) {
 	string s = "";
@@ -158,7 +158,7 @@ string getNextLine(InputStream source) {
 	return str;
 }
 
-Token makeToken(ref string src, InputStream source, BraceType escapeFrom=BraceType.bNone) {
+Token makeToken(ref string src, InputStream source, BraceType escapeFrom=BraceType.None) {
 	Token ret;
 	src = strip(src);
 	if(src[0] == '#') {
@@ -236,6 +236,17 @@ Token makeToken(ref string src, InputStream source, BraceType escapeFrom=BraceTy
 			ret.d = -getNumeric(src);
 			ret.type = Token.VarType.tNumeric;
 		}
+	} else if(src[0] == '|') {
+		if(escapeFrom == BraceType.Dict && src.length > 1 && src[1] == ']') {
+			// End the dict
+			ret.type = Token.VarType.tClosingBrace;
+			src = src[2..$];
+		} else {
+			string s = cast(string)(match(src,opcodeRegex).captures[0]);
+			ret.str = s;
+			ret.type = Token.VarType.tOpcode;
+			src = src[s.length..$];
+		}
 	} else if(inPattern(src[0],opcodeList)) {
 		string s = cast(string)(match(src,opcodeRegex).captures[0]);
 		ret.str = s;
@@ -247,20 +258,28 @@ Token makeToken(ref string src, InputStream source, BraceType escapeFrom=BraceTy
 	} else if(src[0] == '(') {
 		// Recursion all up in this code
 		src = src[1..$];
-		ret.arr = tokenize(src, source, BraceType.bParen);
+		ret.arr = tokenize(src, source, BraceType.Paren);
 		ret.type = Token.VarType.tCompoundStatement;
 	} else if(src[0] == '[') {
 		// Recursion all up in this code
-		src = src[1..$];
-		ret.arr = tokenize(src, source, BraceType.bBrace);
-		ret.type = Token.VarType.tRawArray;
+		if(src.length > 1 && src[1] == '|') {
+			// Create a dict
+			src = src[2..$];
+			ret.arr = tokenize(src, source, BraceType.Dict);
+			ret.type = Token.VarType.tRawDictionary;
+		} else {
+			// Create an array
+			src = src[1..$];
+			ret.arr = tokenize(src, source, BraceType.Brace);
+			ret.type = Token.VarType.tRawArray;
+		}
 	} else if(src[0] == '{') {
 		// Recursion all up in this code
 		src = src[1..$];
-		ret.arr = tokenize(src, source, BraceType.bBracket);
+		ret.arr = tokenize(src, source, BraceType.Bracket);
 		ret.type = Token.VarType.tCode;
 	} else if(src[0] == ')') {
-		if(escapeFrom == BraceType.bParen) {
+		if(escapeFrom == BraceType.Paren) {
 			// Recursive return
 			ret.type = Token.VarType.tClosingParen;
 			src = src[1..$];
@@ -268,7 +287,7 @@ Token makeToken(ref string src, InputStream source, BraceType escapeFrom=BraceTy
 			throw new OratrParseException("Mismatched )");
 		}
 	} else if(src[0] == ']') {
-		if(escapeFrom == BraceType.bBrace) {
+		if(escapeFrom == BraceType.Brace) {
 			// Recursive return
 			ret.type = Token.VarType.tClosingBrace;
 			src = src[1..$];
@@ -276,7 +295,7 @@ Token makeToken(ref string src, InputStream source, BraceType escapeFrom=BraceTy
 			throw new OratrParseException("Mismatched ]");
 		}
 	} else if(src[0] == '}') {
-		if(escapeFrom == BraceType.bBracket) {
+		if(escapeFrom == BraceType.Bracket) {
 			// Recursive return
 			ret.type = Token.VarType.tClosingBracket;
 			src = src[1..$];
@@ -291,7 +310,7 @@ Token makeToken(ref string src, InputStream source, BraceType escapeFrom=BraceTy
 	return ret;
 }
 
-Token[] tokenize(ref string src, InputStream source, BraceType escapeFrom=BraceType.bNone) {
+Token[] tokenize(ref string src, InputStream source, BraceType escapeFrom=BraceType.None) {
 	Token[] ret;
 	Token tmp;
 	
@@ -300,13 +319,13 @@ Token[] tokenize(ref string src, InputStream source, BraceType escapeFrom=BraceT
 	
 	if(!src.length) {
 		// Handle special cases of empty strings
-		if(escapeFrom == BraceType.bNone) {
+		if(escapeFrom == BraceType.None) {
 			tmp.str = "null";
 			tmp.type = Token.VarType.tBuiltin;
 			tmp.func = &bi_null;
 			ret ~= tmp;
 			return ret;
-		} else if(escapeFrom == BraceType.bBrace) {
+		} else if(escapeFrom == BraceType.Brace) {
 			return ret;
 		} else {
 			if(source is din) dout.writef("> ");
@@ -338,7 +357,7 @@ Token[] tokenize(ref string src, InputStream source, BraceType escapeFrom=BraceT
 				break;
 			}
 		}
-		if(!src.length && escapeFrom != BraceType.bNone) {
+		if(!src.length && escapeFrom != BraceType.None) {
 			if(source is din) dout.writef("> ");
 			src ~= getNextLine(source);
 		}

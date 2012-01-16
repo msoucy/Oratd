@@ -61,7 +61,7 @@ public:
 		}
 		foreach(string o;offsets) {
 			if(ret.type == Token.VarType.tArray) {
-				Token off = makeToken(o,din,BraceType.bNone);
+				Token off = makeToken(o,din,BraceType.None);
 				off = eval(off);
 				if(off.type != Token.VarType.tNumeric) {
 					throw new OratrInvalidOffsetException(o);
@@ -77,7 +77,7 @@ public:
 				// Things are offset by data name, using the module lookup
 				ret = &(Dictionary(*ret)[o]);
 			} else if(ret.type == Token.VarType.tString) {
-				Token off = makeToken(o,din,BraceType.bNone);
+				Token off = makeToken(o,din,BraceType.None);
 				off = eval(off);
 				if(off.type != Token.VarType.tNumeric) {
 					throw new OratrInvalidOffsetException(o);

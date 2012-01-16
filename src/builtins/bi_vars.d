@@ -15,6 +15,7 @@ void import_varops(ref Environment env)
 	mixin(AddFunc!("call"));
 	mixin(AddFunc!("vcall"));
 	mixin(AddFunc!("local"));
+	env.scopes[0]["var"] = env.scopes[0]["local"];
 	mixin(AddFunc!("delete"));
 }
 
