@@ -260,8 +260,7 @@ Token bi_for(ref Token[] argv, ref Environment env)
 {
 	Token ret;
 	if( (argv.length!=2) && (argv.length!=4) ) {
-		throw new OratrArgumentCountExceptionControlStructure(
-			argv.length,"for","2 or 4");
+		throw new OratrArgumentCountExceptionControlStructure(argv.length,"for","2 or 4");
 	}
 	Token	cond, // Condition for continuing
 			incr, // Incrementation section of loop

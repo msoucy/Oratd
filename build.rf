@@ -1,4 +1,5 @@
 -w
+-property
 -od"bin"
 -of"bin/Oratd"
 

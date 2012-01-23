@@ -5,6 +5,7 @@ import errors;
 import bi_math;
 import bi_vars;
 import bi_stdio;
+import std.string;
 import std.cstream;
 
 bool isSettingOpcode(string s)
@@ -38,7 +39,24 @@ Token[] condenseArguments(ref Token[] argv, ref Environment env) {
 				if(argv[i+2].type == Token.VarType.tCompoundStatement) {
 					argv[i+2] = env.eval(argv[i+2]);
 				}
-				argv[i].str ~= argv[i+1].str ~ argv[i+2].str;
+				if(argv[i+2].type == Token.VarType.tNumeric) {
+					argv[i].str ~= argv[i+1].str ~ format("%s",argv[i+2].d);
+				} else {
+					argv[i].str ~= argv[i+1].str ~ argv[i+2].str;
+				}
+				argv = argv[0..i+1]~argv[i+3..$];
+				i -= 1;
+			}
+		} else if(argv[i].type == Token.VarType.tArray) {
+			if(i+2<argv.length && (argv[i+1].type == Token.VarType.tVarOffsetSeperator)) {
+				if(argv[i+2].type == Token.VarType.tCompoundStatement) {
+					argv[i+2] = env.eval(argv[i+2]);
+				}
+				if(argv[i+2].type == Token.VarType.tNumeric) {
+					argv[i] = argv[i].arr[cast(uint)argv[i+2].d];
+				} else if(argv[i+2].type == Token.VarType.tVarname) {
+					argv[i] = argv[i].arr[cast(uint)env.eval(argv[i+2]).d];
+				}
 				argv = argv[0..i+1]~argv[i+3..$];
 				i -= 1;
 			}
@@ -103,7 +121,6 @@ Token[] condenseArguments(ref Token[] argv, ref Environment env) {
 				dict[key] = tok;
 			}
 			env.outscope();
-			argv[i].type = Token.VarType.tDictionary;
 			i -= 1;
 		} else if(argv[i].type == Token.VarType.tArrayElementSeperator) {
 			argv = argv[0..i]~argv[i+1..$];

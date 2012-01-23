@@ -4,6 +4,7 @@ struct Dictionary {
 	Token* _tok;
 	this(ref Token tok) {
 		_tok = &tok;
+		tok.type = Token.VarType.tDictionary;
 	}
 	ref Token opIndex(string offset) {
 		Token* ret;

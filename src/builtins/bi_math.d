@@ -8,24 +8,27 @@ import std.range;
 
 void import_math(ref Environment env) {
 	// Math
-	mixin(AddFunc!("math"));
-	mixin(AddFunc!("int"));
-	mixin(AddFunc!("rand"));
-	mixin(AddFunc!("frand"));
+	mixin(AddFunc!"math");
+	mixin(AddFunc!"int");
+	mixin(AddFunc!"rand");
+	mixin(AddFunc!"frand");
 	// Trig - a category of its own <_<
-	mixin(AddFunc!("sin"));
-	mixin(AddFunc!("cos"));
-	mixin(AddFunc!("tan"));
-	mixin(AddFunc!("asin"));
-	mixin(AddFunc!("acos"));
-	mixin(AddFunc!("atan"));
-	mixin(AddFunc!("sinh"));
-	mixin(AddFunc!("cosh"));
-	mixin(AddFunc!("tanh"));
-	mixin(AddFunc!("asinh"));
-	mixin(AddFunc!("acosh"));
-	mixin(AddFunc!("atanh"));
-	mixin(AddFunc!("abs"));
+	mixin(AddFunc!"sin");
+	mixin(AddFunc!"cos");
+	mixin(AddFunc!"tan");
+	mixin(AddFunc!"asin");
+	mixin(AddFunc!"acos");
+	mixin(AddFunc!"atan");
+	mixin(AddFunc!"sinh");
+	mixin(AddFunc!"cosh");
+	mixin(AddFunc!"tanh");
+	mixin(AddFunc!"asinh");
+	mixin(AddFunc!"acosh");
+	mixin(AddFunc!"atanh");
+	mixin(AddFunc!"abs");
+	// Not quite math, but still useful
+	mixin(AddFunc!"ord");
+	mixin(AddFunc!"chr");
 	
 	// Rounding errors cause problems in precision for PI and trig operations
 	// Manually specify more precision
@@ -65,6 +68,8 @@ real _bi_numeric_math_solve(real a, string op, real b)
 	case ">=":		return a>=b;
 	case "!=":		return a<>b;
 	case "==":		return a==b;
+	case "&&":		return a&&b;
+	case "||":		return a||b;
 	default:		return real.nan;
 	}
 }
@@ -148,7 +153,7 @@ Token _bi_math_solve(Token a, Token op, Token b)
 		if(Operator_Priority(op.str)) {
 			ret.d = _bi_numeric_math_solve(a.d,op.str,b.d);
 		} else {
-			throw new OratrInvalidMathOperatorException(vartypeToStr(a.type),vartypeToStr(b.type));
+			throw new OratrInvalidMathOperatorException(op.str);
 		}
 	} else if((a.type == Token.VarType.tString && b.type == Token.VarType.tString) ||
 			  (a.type == Token.VarType.tTypeID && b.type == Token.VarType.tTypeID)) {
@@ -167,33 +172,36 @@ int Operator_Priority(string str)
 	switch(str) {
 	case "**":
 	case "^^":
-		return 8;
+		return 9;
 	case "*":
 	case "/":
 	case "%":
-		return 7;
+		return 8;
 	case "+":
 	case "-":
-		return 6;
+		return 7;
 	case "<<":
 	case ">>":
 	case ">>>":
-		return 5;
+		return 6;
 	case "<?":
 	case ">?":
-		return 4;
+		return 5;
 	case "==":
 	case "!=":
 	case ">":
 	case ">=":
 	case "<":
 	case "<=":
-		return 3;
+		return 4;
 	case "|":
 	case "&":
 	case "^":
-		return 2;
+		return 3;
 	case "~":
+		return 2;
+	case "&&":
+	case "||":
 		return 1;
 	default:
 		return 0;
@@ -210,9 +218,7 @@ Token bi_math(ref Token[] argv, ref Environment env)
 		if(tmp.type == Token.VarType.tNumeric && i<(argv.length-1)) {
 			tmp = env.eval(argv[++i]);
 			if(tmp.type == Token.VarType.tNumeric) {
-				Token op = "+";
-				op.type = Token.VarType.tOpcode;
-				argv = argv[0..i]~op~argv[i..$];
+				argv = argv[0..i]~Token("+").withType(Token.VarType.tOpcode)~argv[i..$];
 			}
 		}
 	}
@@ -251,7 +257,7 @@ Token bi_math(ref Token[] argv, ref Environment env)
 		default: {
 			throw new OratrInvalidArgumentException(token.vartypeToStr(tok.type), i);
 		}
-		};
+		}; // switch
 	}
 	while(s.length) {
 		postfix ~= s[$-1];
@@ -422,5 +428,33 @@ Token bi_log(ref Token[] argv, ref Environment env)
 	} else {
 		throw new OratrArgumentCountException(argv.length,"log","1-2");
 	}
+	return ret;
+}
+
+Token bi_chr(ref Token[] argv, ref Environment env)
+{
+	if(argv.length != 1) {
+		throw new OratrArgumentCountException(argv.length,"chr","1");
+	}
+	Token ret = env.eval(argv[0]);
+	if(ret.type != Token.VarType.tNumeric || ret.d != cast(byte)ret.d) {
+		throw new OratrInvalidArgumentException(vartypeToStr(ret.type),0);
+	}
+	ret.str = ""~cast(byte)(ret.d);
+	ret.type = Token.VarType.tString;
+	return ret;
+}
+
+Token bi_ord(ref Token[] argv, ref Environment env)
+{
+	if(argv.length != 1) {
+		throw new OratrArgumentCountException(argv.length,"ord","1");
+	}
+	Token ret = env.eval(argv[0]);
+	if(ret.type != Token.VarType.tString || ret.str.length != 1) {
+		throw new OratrInvalidArgumentException(vartypeToStr(ret.type),0);
+	}
+	ret.d = cast(real)(ret.str[0]);
+	ret.type = Token.VarType.tNumeric;
 	return ret;
 }

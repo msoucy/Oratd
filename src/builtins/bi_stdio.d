@@ -7,10 +7,11 @@ import std.string;
 
 void import_stdio(ref Environment env) {
 	// I/O
-	mixin(AddFunc!("echo"));
-	mixin(AddFunc!("print"));
-	mixin(AddFunc!("echo"));
-	mixin(AddFunc!("get"));
+	mixin(AddFunc!"echo");
+	mixin(AddFunc!"print");
+	mixin(AddFunc!"echo");
+	mixin(AddFunc!"get");
+	mixin(AddFunc!"getch");
 	
 	env.scopes[0]["__endl__"] = Token("\n");
 	env.scopes[0]["__tab__"] = Token("\t");
@@ -128,4 +129,13 @@ Token bi_get(ref Token[] argv, ref Environment env)
 	}while(str=="");
 	ret = Token(cast(string)str);
 	return ret;
+}
+
+Token bi_getch(ref Token[] argv, ref Environment env)
+{
+	if(argv.length) {
+		throw new OratrArgumentCountException(argv.length,"getch","0");
+	}
+	char ch = din.getc();
+	return Token(ch~"");
 }
