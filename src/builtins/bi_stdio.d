@@ -47,6 +47,19 @@ string makeString(ref Token tok, ref Environment env)
 			ret ~= "]";
 			break;
 		}
+		case Token.VarType.tDictionary: {
+			ret = "[|";
+			dout.writef("Argc: %s\n",tok.arr.length);
+			foreach(i,arg;tok.arr) {
+				ret ~= arg.str ~ ":" ~ makeString(arg.arr[0],env);
+				//ret ~= makeString(arg,env);
+				if(i != tok.arr.length-1) {
+					ret ~= ", ";
+				}
+			}
+			ret ~= "|]";
+			break;
+		}
 		case Token.VarType.tType: {
 			ret = format("<type \"%s\">", tok.str);
 			break;
