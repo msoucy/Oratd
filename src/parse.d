@@ -12,7 +12,7 @@ bool isSettingOpcode(string s)
 {
 	return (
 		(s=="=") ||
-		(s=="~=") ||	
+		(s=="~=") ||
 		(s=="+=") ||
 		(s=="-=") ||
 		(s=="*=") ||
@@ -25,8 +25,7 @@ bool isSettingOpcode(string s)
 		(s=="<?=") ||
 		(s==">?=") ||
 		(s=="<<=") ||
-		(s==">>=") ||
-		(s==">>>=")
+		(s==">>=")
 	);
 }
 
@@ -92,8 +91,8 @@ Token[] condenseArguments(ref Token[] argv, ref Environment env) {
 			Token[][] temps;
 			temps.length = 1;
 			if(argv[i].arr.length == 0) {
-				// It's just [], an empty array
-				argv[i].type = Token.VarType.tArray;
+				// It's just [||], an empty dictionary
+				argv[i].type = Token.VarType.tDictionary;
 				continue;
 			}
 			foreach(ref tok;argv[i].arr) {
@@ -113,7 +112,6 @@ Token[] condenseArguments(ref Token[] argv, ref Environment env) {
 					argv[i].arr ~= env.eval(toks[0]);
 				} else {
 					parse(toks,env);
-					argv[i].arr ~= *env.evalVarname("__return__");
 				}
 			}
 			auto dict = Dictionary(argv[i]);

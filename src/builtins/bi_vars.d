@@ -85,15 +85,14 @@ Token bi_function(ref Token[] argv, ref Environment env)
 		throw new OratrInvalidArgumentException(vartypeToStr(code.type),argv.length-1);
 	}
 	ret.type = Token.VarType.tFunction;
-	ret.arr.length = 2;
-	ret.arr[0].type = Token.VarType.tArray;
-	ret.arr[1] = code;
+	auto func = FunctionWrapper(ret);
+	func.code = code;
 	bool nextIsReference = false;
 	for(uint i=0;i<argv.length-1;i++) {
 		if(argv[i].type == Token.VarType.tVarname) {
-			ret.arr[0].arr ~= argv[i];
+			func.argv ~= argv[i];
 			// We use recast to mean reference...
-			if(nextIsReference) ret.arr[0].arr[$-1].type = Token.VarType.tRecast;
+			if(nextIsReference) func.argv[$-1].type = Token.VarType.tRecast;
 			nextIsReference = false;
 		} else if(argv[i].type == Token.VarType.tOpcode && argv[i].str == "@") {
 			if(i==argv.length-2) {
@@ -139,8 +138,9 @@ Token bi_call(ref Token[] argv, ref Environment env)
 	}
 	env.inscope();
 	uint i=0;
-	for(i=0;i<func.arr[0].arr.length;i++) {
-		if(func.arr[0].arr[i].type == Token.VarType.tRecast) {
+	auto wrapper = FunctionWrapper(func);
+	for(i=0;i<wrapper.argv.length;i++) {
+		if(wrapper.argv[i].type == Token.VarType.tRecast) {
 			if(argv[i+1].type != Token.VarType.tVarname) {
 				throw new OratrInvalidArgumentException(vartypeToStr(argv[i+1].type),i+1);
 			}
@@ -148,13 +148,13 @@ Token bi_call(ref Token[] argv, ref Environment env)
 		Token tmp = env.eval(argv[i+1]);
 		env.scopes[$-1][func.arr[0].arr[i].str] = tmp;
 	}
-	if(func.type == Token.VarType.tVariadicFunction && argv.length-1 > func.arr[0].arr.length) {
+	if(func.type == Token.VarType.tVariadicFunction && argv.length-1 > wrapper.argv.length) {
 		env.scopes[$-1]["__varargs__"] = Token().withType(Token.VarType.tArray);
 		env.scopes[$-1]["__varargs__"].arr = argv[i+1..$];
 	}
 	env.scopes[$-1]["__func__"] = func;
 	env.inscope();
-	parse.parse(func.arr[1].arr,env);
+	parse.parse(wrapper.code.arr,env);
 	ret = *env.evalVarname("__return__");
 	env.outscope();
 	auto results = env.scopes[$-1];

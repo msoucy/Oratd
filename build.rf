@@ -16,6 +16,7 @@
 "src/dictionary.d"
 "src/environment.d"
 "src/errors.d"
+"src/funcwrapper.d"
 "src/main.d"
 "src/parse.d"
 "src/system.d"
