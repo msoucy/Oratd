@@ -36,7 +36,7 @@ struct Dictionary {
 		}
 		return ret;
 	}
-	bool opIn(string key) {
+	bool contains(string key) {
 		foreach(ref t;_tok.arr) {
 			if(t.str == key) return true;
 		}

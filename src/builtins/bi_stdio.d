@@ -2,6 +2,7 @@ import token;
 import tokenize;
 import environment;
 import errors;
+import dictionary;
 import std.cstream;
 import std.string;
 
@@ -49,11 +50,10 @@ string makeString(ref Token tok, ref Environment env)
 		}
 		case Token.VarType.tDictionary: {
 			ret = "[|";
-			dout.writef("Argc: %s\n",tok.arr.length);
-			foreach(i,arg;tok.arr) {
-				ret ~= arg.str ~ ":" ~ makeString(arg.arr[0],env);
-				//ret ~= makeString(arg,env);
-				if(i != tok.arr.length-1) {
+			auto d = Dictionary(tok);
+			foreach(i,key,val;d) {
+				ret ~= key ~ ":" ~ makeString(val,env);
+				if(i != d.length-1) {
 					ret ~= ", ";
 				}
 			}

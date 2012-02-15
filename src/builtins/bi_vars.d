@@ -3,6 +3,8 @@ import environment;
 import errors;
 import parse;
 import bi_math;
+import funcwrapper;
+import dictionary;
 import std.string;
 import std.cstream;
 

@@ -63,6 +63,15 @@ public:
 	}
 }
 
+bool iterableType(Token.VarType t) {
+	return (t == Token.VarType.tArray ||
+			t == Token.VarType.tDictionary ||
+			t == Token.VarType.tCode ||
+			t == Token.VarType.tFunction ||
+			t == Token.VarType.tVariadicFunction
+	);
+}
+
 string vartypeToStr(Token.VarType v)
 {
 	switch(v) {
