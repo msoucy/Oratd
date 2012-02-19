@@ -6,6 +6,7 @@ import bi_vars;
 import bi_manipulations;
 import bi_system;
 import bi_files;
+import bi_conv;
 
 void init_builtins(ref Environment env) {
 	import_basics(env);
@@ -15,6 +16,7 @@ void init_builtins(ref Environment env) {
 	import_math(env);
 	import_system(env);
 	import_imports(env);
+	import_casts(env);
 }
 
 void function(ref Environment)[string] createImports() {

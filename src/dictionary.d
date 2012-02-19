@@ -22,6 +22,13 @@ struct Dictionary {
 		}
 		return *ret;
 	}
+	int opApply(int delegate(ref Token) dg) {
+		auto ret = 0;
+		foreach(ref t;_tok.arr) {
+			ret = dg(t.arr[0]);
+		}
+		return ret;
+	}
 	int opApply(int delegate(ref string, ref Token) dg) {
 		auto ret = 0;
 		foreach(ref t;_tok.arr) {

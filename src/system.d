@@ -2,6 +2,7 @@ import std.file;
 import std.math;
 import std.stdio;
 import std.string;
+import std.conv;
 
 const string FILEXT = ".or";
 
@@ -24,7 +25,6 @@ real strToDouble(string str, uint base=10)
 	real ret = 0;
 	real mantissa = 0;
 	
-	
 	foreach(uint i;0..str.length) {
 		if(str[i] == '.') {
 			mantissa = 1;
@@ -41,6 +41,31 @@ real strToDouble(string str, uint base=10)
 		}
 	}
 			
+	return ret;
+}
+
+string realToString(uint radix=10)(real r) if(radix==10)
+{
+	// Use the significantly faster base case
+	return to!string(r);
+}
+
+string realToString(uint radix,uint depth=15)(real r) if(radix!=10 && 1<radix/+ && radix<=16+/)
+{
+	string ret = "";
+	if(cast(long)r) {
+		ret ~= to!string(cast(long)r,radix);
+	}
+	if(r != cast(long)r) {
+		ret ~= '.';
+		uint _depth = 15;
+		while(r != 0 && _depth--) {
+			r -= cast(long)r;
+			r *= radix;
+			ret ~= to!string(cast(long)r,radix);
+		}
+		while(ret[$-1] == '0') ret = ret[0..$-1];
+	}
 	return ret;
 }
 

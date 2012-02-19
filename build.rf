@@ -6,6 +6,7 @@
 -I"src"
 
 "src/builtins/bi_basics.d"
+"src/builtins/bi_conv.d"
 "src/builtins/bi_files.d"
 "src/builtins/bi_init.d"
 "src/builtins/bi_manipulations.d"
@@ -13,6 +14,7 @@
 "src/builtins/bi_stdio.d"
 "src/builtins/bi_system.d"
 "src/builtins/bi_vars.d"
+"src/builtins/bi_wrappers.d"
 "src/dictionary.d"
 "src/environment.d"
 "src/errors.d"

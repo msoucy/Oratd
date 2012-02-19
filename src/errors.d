@@ -58,6 +58,20 @@ class OratrInvalidOffsetException : OratrBaseException {
     }
 }
 
+class OratrInvalidConversionFromException : OratrBaseException {
+	this( string type, string file = __FILE__, size_t line = __LINE__ )
+    {
+        super( "Invalid conversion from type \""~type~"\"", file, line );
+    }
+}
+
+class OratrInvalidConversionToException : OratrBaseException {
+	this( string type, string file = __FILE__, size_t line = __LINE__ )
+    {
+        super( "Invalid conversion to type \""~type~"\"", file, line );
+    }
+}
+
 class OratrOutOfRangeException : OratrBaseException {
 	this( string arr, int position, string file = __FILE__, size_t line = __LINE__ )
     {

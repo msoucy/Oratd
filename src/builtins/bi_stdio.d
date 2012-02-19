@@ -18,7 +18,7 @@ void import_stdio(ref Environment env) {
 	env.scopes[0]["__tab__"] = Token("\t");
 }
 
-string makeString(ref Token tok, ref Environment env)
+string makeString(ref Token tok)
 {
 	string ret;
 	switch(tok.type) {
@@ -39,7 +39,7 @@ string makeString(ref Token tok, ref Environment env)
 				if(arg.type == Token.VarType.tString) {
 					ret ~= '"'~tokenize.unevalStr(arg.str)~'"';
 				} else {
-					ret ~= makeString(arg,env);
+					ret ~= makeString(arg);
 				}
 				if(i != tok.arr.length-1) {
 					ret ~= ", ";
@@ -52,7 +52,7 @@ string makeString(ref Token tok, ref Environment env)
 			ret = "[|";
 			auto d = Dictionary(tok);
 			foreach(i,key,val;d) {
-				ret ~= key ~ ":" ~ makeString(val,env);
+				ret ~= key ~ ":" ~ makeString(val);
 				if(i != d.length-1) {
 					ret ~= ", ";
 				}
@@ -108,9 +108,8 @@ Token _bi_printto(ref Token[] argv, ref Environment env, OutputStream ostr)
 {
 	Token retval;
 	foreach(ref ret;argv) {
-		// Crashes below
 		ret = env.eval(ret);
-		ostr.writef("%s", makeString(ret,env));
+		ostr.writef("%s", makeString(ret));
 		retval = ret;
 	}
 	return retval;

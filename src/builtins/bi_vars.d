@@ -5,6 +5,7 @@ import parse;
 import bi_math;
 import funcwrapper;
 import dictionary;
+import bi_stdio : makeString;
 import std.string;
 import std.cstream;
 

@@ -16,6 +16,7 @@ struct Environment {
 private:
 	alias Token[string] Scope;
 public:
+	Token function(Token)[string][string] conversions;
 	enum Flags {
 		Break=0x01
 	}

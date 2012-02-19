@@ -257,7 +257,7 @@ Token bi_math(ref Token[] argv, ref Environment env)
 		default: {
 			throw new OratrInvalidArgumentException(token.vartypeToStr(tok.type), i);
 		}
-		}; // switch
+		} // switch
 	}
 	while(s.length) {
 		postfix ~= s[$-1];
@@ -295,7 +295,7 @@ Token bi_math(ref Token[] argv, ref Environment env)
 		default:
 			// It should never reach this, but just in case...
 			throw new OratrInvalidArgumentException(token.vartypeToStr(tok.type), i);
-		};
+		}
 	}
 	return s[$-1];
 }
