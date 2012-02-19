@@ -20,6 +20,7 @@ void import_varops(ref Environment env)
 	mixin(AddFunc!("local"));
 	env.scopes[0]["var"] = env.scopes[0]["local"];
 	mixin(AddFunc!("delete"));
+	mixin(AddFunc!("apply"));
 }
 
 Token bi_set(ref Token[] argv, ref Environment env)
@@ -205,4 +206,32 @@ Token bi_delete(ref Token[] argv, ref Environment env)
 		}
 	}
 	return *env.evalVarname("__return__");
+}
+
+void _apply_values(ref Token[] args, ref Dictionary d)
+{
+	foreach(ref a;args) {
+		if(a.type == Token.VarType.tVarname && d.contains(a.str)) {
+			a = d[a.str];
+		} else if(a.type == Token.VarType.tFunction || a.type == Token.VarType.tVariadicFunction) {
+			if(FunctionWrapper(a).code.arr.length) {
+				_apply_values(FunctionWrapper(a).code.arr, d);
+			}
+		} else if(a.type == Token.VarType.tCode || a.type == Token.VarType.tCompoundStatement) {
+			_apply_values(a.arr,d);
+		}
+	}
+}
+
+Token bi_apply(ref Token[] argv, ref Environment env)
+{
+	// Apply arguments to a piece of code (partially evaluate): [function|code], dict -> [function|code]
+	if(argv.length != 2) throw new OratrArgumentCountException(argv.length,"apply","2");
+	Token code = argv[0];
+	if(code.type == Token.VarType.tCompoundStatement) code = env.eval(code);
+	if(!iterableType(code.type)) throw new OratrInvalidArgumentException(vartypeToStr(code.type),0);
+	auto dict = env.eval(argv[1]);
+	if(dict.type != Token.VarType.tDictionary) throw new OratrInvalidArgumentException(vartypeToStr(dict.type),1);
+	_apply_values(code.arr,Dictionary(dict));
+	return code;
 }
