@@ -1,6 +1,8 @@
 import token;
 import environment;
 import errors;
+import funcwrapper;
+import parse;
 import std.cstream;
 import std.string;
 import core.stdc.stdlib : exit;
@@ -13,6 +15,7 @@ void import_basics(ref Environment env) {
 	// Control structures
 	mixin(AddFunc!("if"));
 	mixin(AddFunc!("switch"));
+	mixin(AddFunc!("match"));
 	mixin(AddFunc!("while"));
 	mixin(AddFunc!("for"));
 	mixin(AddFunc!("foreach"));
@@ -181,6 +184,7 @@ Token bi_switch(ref Token[] argv, ref Environment env)
 			runCode = true;
 		} else {
 			val = env.eval(val);
+			if(val.type != baseValue.type) continue;
 			switch(baseValue.type) {
 			case Token.VarType.tNumeric:
 				runCode = (baseValue.d == val.d);
@@ -203,6 +207,54 @@ Token bi_switch(ref Token[] argv, ref Environment env)
 				break;
 			default:
 				break;
+			}
+		}
+		if(runCode) {
+			foreach(tok;argv[i+1..$]) {
+				if(tok.type == Token.VarType.tCode) {
+					parse.parse(tok.arr,env);
+					ret = *env.evalVarname("__return__");
+					// Stop checking the conditions
+					break execStatement;
+				}
+			}
+			// If it reached here, the condition was reached but no code was found
+			throw new OratrInvalidCodeException();
+		}
+	}
+	return ret;
+}
+
+Token bi_match(ref Token[] argv, ref Environment env)
+{
+	Token ret;
+	if(argv.length < 3) {
+		throw new OratrArgumentCountExceptionControlStructure(
+			argv.length,"switch","3+ matching tokens and");
+	}
+	Token baseValue = env.eval(argv[0]);
+	if(baseValue.type != Token.VarType.tNumeric &&
+		baseValue.type != Token.VarType.tString &&
+		baseValue.type != Token.VarType.tArray &&
+		baseValue.type != Token.VarType.tTypeID) {
+		throw new OratrInvalidArgumentException(vartypeToStr(baseValue.type),0);
+	}
+	execStatement:
+	foreach(uint i;1..argv.length) {
+		Token val = argv[i];
+		bool runCode = false;
+		if(val.str == "default" && val.type == Token.VarType.tVarname) {
+			runCode = true;
+		} else {
+			val = env.eval(val);
+			if(val.type == Token.VarType.tCode) continue;
+			if(!isUnaryOratrFunction(val)) {
+				throw new OratrInvalidArgumentException(vartypeToStr(val.type), i);
+			}
+			auto cmd_expression = [val, baseValue];
+			parse.parse(cmd_expression,env);
+			if(*env.evalVarname("__return__")) {
+				runCode = true;
 			}
 		}
 		if(runCode) {

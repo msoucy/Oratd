@@ -1,6 +1,16 @@
 import token;
 import dictionary;
 
+bool isUnaryOratrFunction(ref Token t) {
+	if(t.type == Token.VarType.tFunction) {
+		return t.arr[0].arr.length == 1;
+	} else if(t.type == Token.VarType.tVariadicFunction) {
+		return t.arr[0].arr.length < 2;
+	} else {
+		return false;
+	}
+}
+
 struct FunctionWrapper {
 	private invariant() {
 		// This gets called after every member completes

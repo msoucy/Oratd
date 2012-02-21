@@ -61,6 +61,11 @@ public:
 		}
 		return (str == b.str && func == b.func && type == b.type); 
 	}
+	bool opCast(T:bool)() {
+		return ((type==VarType.tNumeric && d != 0) ||
+				(type==VarType.tString && str != "") ||
+				(type==VarType.tArray && arr != []));
+	}
 }
 
 bool iterableType(Token.VarType t) {
