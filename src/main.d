@@ -5,6 +5,7 @@ import errors;
 import system;
 import parse;
 import bi_init;
+import bi_stdio;
 
 import std.stdio;
 import std.string;
@@ -47,9 +48,10 @@ void main(string[] argv)
 	env.scopes[0]["__name__"] = Token("__init__");
 	init_builtins(env);
 	try {
-		Token[] tempargs = [Token("source").withType(Token.VarType.tVarname),
-							Token("~/.oratrc")];
-		parse.parse(tempargs,env);
+		version(Posix) {
+			Token[] tempargs = [Token("~/.oratrc")];
+			bi_files.bi_source(tempargs,env);
+		}
 	} catch(OratrMissingFileException e) {
 		// Do nothing, they just don't have an oratrc file
 	}
@@ -62,7 +64,7 @@ void main(string[] argv)
 			auto toks = tokenize.tokenize(buf,din);
 			parse.parse(toks,env);
 		} catch(OratrBaseException e) {
-			dout.writef("%s\n", e.msg);
+			dout.writef("%s: %s[%s]\n", e.msg, e.file, e.line);
 		}
 	}
 }

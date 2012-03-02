@@ -164,6 +164,7 @@ Token bi_call(ref Token[] argv, ref Environment env)
 	auto results = env.scopes[$-1];
 	env.outscope();
 	for(i=0;i<func.arr[0].arr.length;i++) {
+		// Assign all values for the modified values to their proper values
 		if(func.arr[0].arr[i].type == Token.VarType.tRecast) {
 			*env.evalVarname(argv[i+1].str) = results[func.arr[0].arr[i].str];
 		}

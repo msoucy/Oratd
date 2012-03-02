@@ -40,7 +40,7 @@ Token _bi_run_code(ref Token[] argv, ref Environment env, string name, ushort sc
 				parsetest = new File(filename, FileMode.In);
 			}
 		}
-		if(!parsetest.isOpen()) {
+		if(parsetest !is null && !parsetest.isOpen()) {
 			delete parsetest;
 		}
 	} else {

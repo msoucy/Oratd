@@ -177,7 +177,7 @@ Token bi_switch(ref Token[] argv, ref Environment env)
 		throw new OratrInvalidArgumentException(vartypeToStr(baseValue.type),0);
 	}
 	execStatement:
-	foreach(uint i;1..argv.length) {
+	foreach(size_t i;1..argv.length) {
 		Token val = argv[i];
 		bool runCode = false;
 		if(val.str == "default" && val.type == Token.VarType.tVarname) {
@@ -198,7 +198,7 @@ Token bi_switch(ref Token[] argv, ref Environment env)
 					runCode = false;
 					break;
 				}
-				foreach(uint j;0..val.arr.length) {
+				foreach(size_t j;0..val.arr.length) {
 					runCode &= (baseValue.arr[j] == val.arr[j]);
 				}
 				break;
@@ -240,7 +240,7 @@ Token bi_match(ref Token[] argv, ref Environment env)
 		throw new OratrInvalidArgumentException(vartypeToStr(baseValue.type),0);
 	}
 	execStatement:
-	foreach(uint i;1..argv.length) {
+	foreach(size_t i;1..argv.length) {
 		Token val = argv[i];
 		bool runCode = false;
 		if(val.str == "default" && val.type == Token.VarType.tVarname) {

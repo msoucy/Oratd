@@ -32,9 +32,9 @@ public:
 	}
 	string str = "";
 	@property ref real d() {
-			str.length = real.sizeof;
-			return *cast(real*)str.ptr;
-		}
+		str.length = real.sizeof;
+		return *cast(real*)str.ptr;
+	}
 	// Helper functions that let me do construction-time editing
 	Token withNumeric(real _d) {
 		d = _d;

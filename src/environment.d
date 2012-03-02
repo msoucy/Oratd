@@ -23,8 +23,8 @@ public:
 	uint flags = 0;
 	Token* evalVarname(string src) {
 		Token* ret;
-		int recastLoc = std.string.indexOf(src,'$');
-		int offsetLoc = std.string.lastIndexOf(src,':');
+		auto recastLoc = std.string.indexOf(src,'$');
+		auto offsetLoc = std.string.lastIndexOf(src,':');
 		if(offsetLoc > recastLoc && recastLoc != -1) {
 			throw new OratrParseException(std.string.format("Illegal offset after cast in `%s`", src));
 		}
