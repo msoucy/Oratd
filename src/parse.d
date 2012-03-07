@@ -159,7 +159,10 @@ ref Environment parse(ref Token[] argv, ref Environment env)
 				ret = bi_math.bi_math(arglist,env);
 			}
 		}
+		*env.evalVarname("__return__") = ret;
+		if(env.flags & Environment.Flags.Break) {
+			break;
+		}
 	}
-	*env.evalVarname("__return__") = ret;
 	return env;
 }

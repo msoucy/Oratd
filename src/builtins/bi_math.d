@@ -104,6 +104,19 @@ real _bi_array_math_solve(Token[] a, string op, Token[] b)
 	}
 }
 
+real _bi_typeid_math_solve(Token a, string op, Token b)
+{
+	switch(op) {
+	case "!=": {
+		return a.str != b.str;
+	}
+	case "==": {
+		return a.str == b.str;
+	}
+	default:		return real.nan;
+	}
+}
+
 Token _bi_math_solve(Token a, Token op, Token b)
 {
 	Token ret = 0;
@@ -152,6 +165,13 @@ Token _bi_math_solve(Token a, Token op, Token b)
 		ret.type = Token.VarType.tNumeric;
 		if(Operator_Priority(op.str)) {
 			ret.d = _bi_numeric_math_solve(a.d,op.str,b.d);
+		} else {
+			throw new OratrInvalidMathOperatorException(op.str);
+		}
+	} else if(a.type == Token.VarType.tTypeID && b.type == Token.VarType.tTypeID) {
+		ret.type = Token.VarType.tNumeric;
+		if(Operator_Priority(op.str)) {
+			ret.d = _bi_typeid_math_solve(a,op.str,b);
 		} else {
 			throw new OratrInvalidMathOperatorException(op.str);
 		}
@@ -250,6 +270,7 @@ Token bi_math(ref Token[] argv, ref Environment env)
 		case Token.VarType.tCode:
 		case Token.VarType.tFunction:
 		case Token.VarType.tNumeric:
+		case Token.VarType.tTypeID:
 		case Token.VarType.tString: {
 			postfix ~= tok;
 			break;
@@ -268,8 +289,7 @@ Token bi_math(ref Token[] argv, ref Environment env)
 	
 	// Step 2: solve the postfix expression
 	foreach(uint i,ref tok;postfix) {
-		switch(tok.type) {
-		case Token.VarType.tOpcode: {
+		if(tok.type == Token.VarType.tOpcode) {
 			// Pop two and do the matching operation
 			// They're done backwards...just part of the algorithm
 			Token a, b;
@@ -282,19 +302,8 @@ Token bi_math(ref Token[] argv, ref Environment env)
 				throw new OratrMissingOperandException();
 			}
 			s ~= _bi_math_solve(a,tok,b);
-			break;
-		}
-		case Token.VarType.tArray:
-		case Token.VarType.tCode:
-		case Token.VarType.tFunction:
-		case Token.VarType.tNumeric:
-		case Token.VarType.tString: {
+		} else  {
 			s ~= tok;
-			break;
-		}
-		default:
-			// It should never reach this, but just in case...
-			throw new OratrInvalidArgumentException(token.vartypeToStr(tok.type), i);
 		}
 	}
 	return s[$-1];
