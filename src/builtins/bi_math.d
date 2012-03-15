@@ -68,6 +68,7 @@ real _bi_numeric_math_solve(real a, string op, real b)
 	case ">=":		return a>=b;
 	case "!=":		return a<>b;
 	case "==":		return a==b;
+	case "->":		return (!a)||(a&&b);
 	case "&&":		return a&&b;
 	case "||":		return a||b;
 	default:		return real.nan;
@@ -213,6 +214,7 @@ int Operator_Priority(string str)
 	case ">=":
 	case "<":
 	case "<=":
+	case "->":
 		return 4;
 	case "|":
 	case "&":
