@@ -166,6 +166,8 @@ Token bi_len(ref Token[] argv, ref Environment env)
 		ret = Token(ret.arr.length);
 	} else if(ret.type == Token.VarType.tString) {
 		ret = Token(ret.str.length);
+	} else if(ret.type == Token.VarType.tDictionary) {
+		ret = Token(ret.arr.length);
 	} else {
 		throw new OratrInvalidArgumentException(vartypeToStr(ret.type),0);
 	}

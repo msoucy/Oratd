@@ -40,7 +40,7 @@ real strToDouble(string str, uint base=10)
 			}
 		}
 	}
-			
+	
 	return ret;
 }
 
@@ -66,6 +66,7 @@ string realToString(uint radix,uint depth=15)(real r) if(radix!=10 && 1<radix/+ 
 		}
 		while(ret[$-1] == '0') ret = ret[0..$-1];
 	}
+	if(ret.length == 0) ret ~= "0";
 	return ret;
 }
 

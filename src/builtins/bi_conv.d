@@ -17,6 +17,9 @@ void import_casts(ref Environment env)
 	env.conversions["string"]["numeric"] = function Token(Token t) {
 		return t.withType(Token.VarType.tNumeric).withNumeric(strToDouble(t.str));
 	};
+	env.conversions["string"]["int"] = function Token(Token t) {
+		return t.withType(Token.VarType.tNumeric).withNumeric(cast(long)strToDouble(t.str));
+	};
 	env.conversions["numeric"]["string"] = function Token(Token t) {
 		return t.withType(Token.VarType.tString).withString(realToString(t.d));
 	};
@@ -81,7 +84,7 @@ Token bi_cast(ref Token[] argv, ref Environment env)
 		throw new OratrInvalidConversionFromException(oldType);
 	}
 	if(!newType.str.length || newType.str !in env.conversions[oldType]) {
-		throw new OratrInvalidConversionFromException(newType.str);
+		throw new OratrInvalidConversionToException(newType.str);
 	}
 	return env.conversions[oldType][newType.str](oldData);
 }

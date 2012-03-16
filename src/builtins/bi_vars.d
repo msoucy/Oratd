@@ -155,6 +155,9 @@ Token bi_call(ref Token[] argv, ref Environment env)
 	if(func.type == Token.VarType.tVariadicFunction && argv.length-1 > wrapper.argv.length) {
 		env.scopes[$-1]["__varargs__"] = Token().withType(Token.VarType.tArray);
 		env.scopes[$-1]["__varargs__"].arr = argv[i+1..$];
+		foreach(ref v;env.scopes[$-1]["__varargs__"].arr) {
+			v = env.eval(v);
+		}
 	}
 	env.scopes[$-1]["__func__"] = func;
 	env.inscope();
