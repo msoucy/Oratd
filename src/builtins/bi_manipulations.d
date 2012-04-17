@@ -94,13 +94,13 @@ Token bi_slice(ref Token[] argv, ref  Environment env)
 			}
 			if(stride>0) {
 				auto backarr = ret.arr;
-				ret.arr.clear;
+				ret.arr.length = 0;
 				foreach(ch;std.range.stride(backarr,stride)) {
 					ret.arr ~= ch;
 				}
 			} else if(stride<0) {
 				auto backarr = ret.arr.dup.reverse;
-				ret.arr.clear;
+				ret.arr.length = 0;
 				foreach(ch;std.range.stride(backarr,-stride)) {
 					ret.arr ~= ch;
 				}
