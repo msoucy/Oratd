@@ -9,17 +9,17 @@ import std.regex;
 import std.ascii;
 
 // Regexes that handle the basic tokens
-string doubleQuotedStringRegex = "(\"[^\"\\\\]*(?:\\\\.[^\"\\\\]*)*\")";
-string singleQuotedStringRegex = "(\'[^\'\\\\]*(?:\\\\.[^\'\\\\]*)*\')";
-string singleQuotedRawStringRegex = "(`.*?`)";
-string hexRegex = "((\\+|-)?0[xX][0-9A-Fa-f]*(\\.[0-9A-Fa-f]*)?)";
-string binaryRegex = "([\\+\\-]?0[bB][01]*(\\.[01]*)?)";
-string octalRegex = "([\\+\\-]?0[oO][0-7]*(\\.[0-7]*)?)";
-string decimalRegex = "([\\+\\-]?[0-9]*(\\.[0-9]*)?)";
-string opcodeRegex = "([\\+\\-\\*/\\\\=\\^&!%~\\|<>\\?@]+)";
-string opcodeList = "+\\*/\\=^&!%~|<>?@";
-string varNameRegex = "((?:[a-zA-Z_][a-zA-Z0-9_]*))";
-string varNameList = "a-zA-Z_";
+enum doubleQuotedStringRegex = ctRegex!"(\"[^\"\\\\]*(?:\\\\.[^\"\\\\]*)*\")";
+enum singleQuotedStringRegex = ctRegex!"(\'[^\'\\\\]*(?:\\\\.[^\'\\\\]*)*\')";
+enum singleQuotedRawStringRegex = ctRegex!"(`.*?`)";
+enum hexRegex = "((\\+|-)?0[xX][0-9A-Fa-f]*(\\.[0-9A-Fa-f]*)?)";
+enum binaryRegex = ctRegex!"([\\+\\-]?0[bB][01]*(\\.[01]*)?)";
+enum octalRegex = ctRegex!"([\\+\\-]?0[oO][0-7]*(\\.[0-7]*)?)";
+enum decimalRegex = ctRegex!"([\\+\\-]?[0-9]*(\\.[0-9]*)?)";
+enum opcodeRegex = ctRegex!"([\\+\\-\\*/\\\\=\\^&!%~\\|<>\\?@]+)";
+enum opcodeList = "+\\*/\\=^&!%~|<>?@";
+enum varNameRegex = "((?:[a-zA-Z_][a-zA-Z0-9_]*))";
+enum varNameList = "a-zA-Z_";
 enum BraceType {None, Paren, Bracket, Brace, Dict}
 
 string evalStr(string str) {
