@@ -12,13 +12,13 @@ import std.ascii;
 enum doubleQuotedStringRegex = ctRegex!"(\"[^\"\\\\]*(?:\\\\.[^\"\\\\]*)*\")";
 enum singleQuotedStringRegex = ctRegex!"(\'[^\'\\\\]*(?:\\\\.[^\'\\\\]*)*\')";
 enum singleQuotedRawStringRegex = ctRegex!"(`.*?`)";
-enum hexRegex = "((\\+|-)?0[xX][0-9A-Fa-f]*(\\.[0-9A-Fa-f]*)?)";
+enum hexRegex = ctRegex!`([\+\-]?0[xX][0-9A-Fa-f]*(\.[0-9A-Fa-f]*)?)`;
 enum binaryRegex = ctRegex!"([\\+\\-]?0[bB][01]*(\\.[01]*)?)";
 enum octalRegex = ctRegex!"([\\+\\-]?0[oO][0-7]*(\\.[0-7]*)?)";
 enum decimalRegex = ctRegex!"([\\+\\-]?[0-9]*(\\.[0-9]*)?)";
 enum opcodeRegex = ctRegex!"([\\+\\-\\*/\\\\=\\^&!%~\\|<>\\?@]+)";
-enum opcodeList = "+\\*/\\=^&!%~|<>?@";
-enum varNameRegex = "((?:[a-zA-Z_][a-zA-Z0-9_]*))";
+enum opcodeList = `\+\*/\=^&!%~|<>\?@`;
+enum varNameRegex = ctRegex!"([a-zA-Z_][a-zA-Z0-9_]*)";
 enum varNameList = "a-zA-Z_";
 enum BraceType {None, Paren, Bracket, Brace, Dict}
 

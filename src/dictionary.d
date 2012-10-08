@@ -6,6 +6,7 @@ struct Dictionary {
 		_tok = &tok;
 		tok.type = Token.VarType.tDictionary;
 	}
+	// Dictionary interface
 	ref Token opIndex(string offset) {
 		Token* ret;
 		foreach(ref t;_tok.arr) {
@@ -22,6 +23,7 @@ struct Dictionary {
 		}
 		return *ret;
 	}
+	// Allow foreach(t;d)
 	int opApply(int delegate(ref Token) dg) {
 		auto ret = 0;
 		foreach(ref t;_tok.arr) {
@@ -29,6 +31,7 @@ struct Dictionary {
 		}
 		return ret;
 	}
+	// Allow foreach(s,t;d)
 	int opApply(int delegate(ref string, ref Token) dg) {
 		auto ret = 0;
 		foreach(ref t;_tok.arr) {
@@ -36,6 +39,7 @@ struct Dictionary {
 		}
 		return ret;
 	}
+	// Allow foreach(i,s,t;d)
 	int opApply(int delegate(ref size_t, ref string, ref Token) dg) {
 		auto ret = 0;
 		foreach(ref i, ref t;_tok.arr) {

@@ -3,6 +3,8 @@
 -od"bin"
 -of"bin/Oratd"
 
+-L-s
+
 -I"src"
 
 "src/builtins/bi_basics.d"

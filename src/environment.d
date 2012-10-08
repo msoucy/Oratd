@@ -1,5 +1,4 @@
 import token;
-import typedefs;
 import errors;
 import tokenize;
 import parse;
@@ -112,34 +111,42 @@ public:
 		scopes[0]["__scope__"] = Token(1);
 		scopes[0]["__prompt__"] = Token("==> ");
 	}
+	/// Handles making a new scope
 	void inscope() {
 		scopes.length += 1;
-		scopes[0]["__scope__"].d = scopes[0]["__scope__"].d+1;
-		
+		scopes[0]["__scope__"].d += 1;
 	}
+	/// Removes the outermost scope
 	void outscope() {
 		if(scopes.length>1) {
 			scopes.length -= 1;
-			scopes[0]["__scope__"].d = scopes[0]["__scope__"].d-1;
+			scopes[0]["__scope__"].d -= 1;
 		}
 	}
+	/// Gets the number of the scope level
 	size_t getscope() {
 		return scopes.length;
 	}
+	/++
+		Try to get the "real" value of the passed-in variable
+		
+		Evaluates Variable types into the value contained in them
+		Evaluates raw arrays and executes compound statements
+	+/
 	ref Token eval(ref Token src) {
 		Token* ret;
-		switch(src.type) {
-			case Token.VarType.tCompoundStatement: {
+		with(Token.VarType) switch(src.type) {
+			case tCompoundStatement: {
 				parse.parse(src.arr, this);
 				ret = evalVarname("__return__"); 
 				break;
 			}
-			case Token.VarType.tVarname: {
+			case tVarname: {
 				ret = evalVarname(src.str);
 				break;
 			}
-			case Token.VarType.tRawArray: {
-				evalRawArray(src);
+			case tRawArray: {
+				ret = &evalRawArray(src);
 				break;
 			}
 			default: {
